@@ -4,6 +4,8 @@ import { AppLayout } from "../layouts/AppLayout";
 import { FilaAtendimento } from "../pages/FilaAtendimento";
 import { Pacientes } from "../pages/Pacientes";
 import { Chamados } from "../pages/Chamados";
+import { DetalheChamado } from "../pages/DetalheChamado";
+import { NotFound } from "../pages/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +29,14 @@ export const router = createBrowserRouter([
         path: "/chamados",
         element: <Chamados />,
       },
+      {
+        path: "/chamados:id",
+        element: <DetalheChamado />,
+      },
+      {
+        path: "*",
+        element: <NotFound />
+      }
     ],
   },
 ]);
