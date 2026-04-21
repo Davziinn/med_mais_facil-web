@@ -14,7 +14,7 @@ import { NavLink, useLocation } from "react-router-dom";
 const navItens = [
   { to: "/", icon: <DashboardIcon />, label: "Dashboard" },
   { to: "/fila", icon: <ListAltIcon />, label: "Fila de Atendimento" },
-  { to: "/pacientes", icon: <PeopleIcon />, label: "Pacientes" },
+  { to: "/paciente", icon: <PeopleIcon />, label: "Pacientes" },
   { to: "/chamados", icon: <DescriptionIcon />, label: "Chamados" },
 ];
 

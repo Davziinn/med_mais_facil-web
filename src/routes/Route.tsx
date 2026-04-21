@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { AppLayout } from "../layouts/AppLayout";
 import { FilaAtendimento } from "../pages/FilaAtendimento/FilaAtendimento";
-import { Pacientes } from "../pages/Pacientes";
+import { Paciente } from "../pages/Pacientes/Paciente";
 import { Chamados } from "../pages/Chamados";
 import { DetalheChamado } from "../pages/DetalheChamado";
 import { NotFound } from "../pages/NotFound";
@@ -22,8 +22,8 @@ export const router = createBrowserRouter([
         element: <FilaAtendimento />,
       },
       {
-        path: "/pacientes",
-        element: <Pacientes />,
+        path: "/paciente",
+        element: <Paciente />,
       },
       {
         path: "/chamados",
