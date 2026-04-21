@@ -8,19 +8,19 @@ import {
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import PeopleIcon from "@mui/icons-material/People";
-import DescriptionIcon from "@mui/icons-material/Description";
+import HistoryIcon from "@mui/icons-material/History";
 import { NavLink, useLocation } from "react-router-dom";
 
 const navItens = [
   { to: "/", icon: <DashboardIcon />, label: "Dashboard" },
   { to: "/fila", icon: <ListAltIcon />, label: "Fila de Atendimento" },
   { to: "/paciente", icon: <PeopleIcon />, label: "Pacientes" },
-  { to: "/chamados", icon: <DescriptionIcon />, label: "Chamados" },
+  { to: "/chamados", icon: <HistoryIcon />, label: "Histórico" },
 ];
 
 export const NavList = () => {
-    const location = useLocation();
-    return (
+  const location = useLocation();
+  return (
     <List sx={{ flex: 1, px: 1.5, py: 2 }}>
       {navItens.map((item) => {
         const isActive =

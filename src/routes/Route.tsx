@@ -3,7 +3,7 @@ import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { AppLayout } from "../layouts/AppLayout";
 import { FilaAtendimento } from "../pages/FilaAtendimento/FilaAtendimento";
 import { Paciente } from "../pages/Pacientes/Paciente";
-import { Chamados } from "../pages/Chamados";
+import { HistoricoChamados } from "../pages/HistoricoChamados/Chamados";
 import { DetalheChamado } from "../pages/DetalheChamado";
 import { NotFound } from "../pages/NotFound";
 
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/chamados",
-        element: <Chamados />,
+        element: <HistoricoChamados />,
       },
       {
         path: "/chamados:id",

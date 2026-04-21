@@ -1,9 +1,9 @@
 import { Box, Grid } from "@mui/material";
 import { HeaderDashboard } from "./components/HeaderDashboard";
-import { Stats } from "./components/Stats";
 import { FilaDeEspera } from "./components/FilaDeEspera";
 import { EmAtendimento } from "./components/EmAtendimento";
 import { Alertas } from "./components/Alertas";
+import { Stats } from "./components/Stats";
 
 export const Dashboard = () => {
   return (
