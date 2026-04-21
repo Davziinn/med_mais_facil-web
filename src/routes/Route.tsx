@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { AppLayout } from "../layouts/AppLayout";
-import { FilaAtendimento } from "../pages/FilaAtendimento";
+import { FilaAtendimento } from "../pages/FilaAtendimento/FilaAtendimento";
 import { Pacientes } from "../pages/Pacientes";
 import { Chamados } from "../pages/Chamados";
 import { DetalheChamado } from "../pages/DetalheChamado";
