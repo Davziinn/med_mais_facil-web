@@ -3,7 +3,7 @@ import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { AppLayout } from "../layouts/AppLayout";
 import { FilaAtendimento } from "../pages/FilaAtendimento/FilaAtendimento";
 import { Paciente } from "../pages/Pacientes/Paciente";
-import { HistoricoChamados } from "../pages/HistoricoChamados/Chamados";
+import { HistoricoChamados } from "../pages/HistoricoChamados/HistoricoChamados";
 import { DetalheChamado } from "../pages/DetalheChamado";
 import { NotFound } from "../pages/NotFound";
 
@@ -33,10 +33,10 @@ export const router = createBrowserRouter([
         path: "/chamados:id",
         element: <DetalheChamado />,
       },
-      {
-        path: "*",
-        element: <NotFound />
-      }
     ],
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
 ]);
