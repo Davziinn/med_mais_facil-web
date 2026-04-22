@@ -30,7 +30,7 @@ export const router = createBrowserRouter([
         element: <HistoricoChamados />,
       },
       {
-        path: "/chamados/1",
+        path: "/chamados/:id",
         element: <DetalheChamado />,
       },
     ],

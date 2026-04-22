@@ -40,11 +40,9 @@ export const NavList = () => {
                   bgcolor: isActive ? "primary.main" : "transparent",
                   color: isActive ? "#fff" : "rgba(238,242,247,0.7)",
 
-                  // 🔥 destaque visual
                   transform: isActive ? "scale(1.03)" : "scale(1)",
                   boxShadow: isActive ? 3 : "none",
 
-                  // 🔥 barra lateral
                   "&::before": isActive
                     ? {
                         content: '""',

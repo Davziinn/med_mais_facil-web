@@ -4,7 +4,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PrioridadeBadge from "../../../components/PrioridadeBadge";
 import StatusBadge from "../../../components/StatusBadge";
 
-export const HeaderDetalhe = () => {
+interface HeaderDetalheProps {
+  id: number;
+}
+
+export const HeaderDetalhe = ({ id }: HeaderDetalheProps) => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <IconButton component={Link} to="/fila">
@@ -13,12 +17,19 @@ export const HeaderDetalhe = () => {
 
       <Box sx={{ flex: 1 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>Chamado A001</Typography>
-            <PrioridadeBadge prioridade="verde" />
-            <StatusBadge status="em_triagem" />
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            Chamado A00{id}
+          </Typography>
+
+          <PrioridadeBadge prioridade="verde" />
+          <StatusBadge status="em_triagem" />
         </Stack>
-        <Typography>Aberto em {new Date().toLocaleString("pt-BR")} · Hospital Kra Lho</Typography>
+
+        <Typography>
+          Aberto em {new Date().toLocaleString("pt-BR")} · Hospital Kra Lho
+        </Typography>
       </Box>
+
       <Stack direction="row" spacing={1}>
         <Button variant="contained">Iniciar Atendimento</Button>
         <Button variant="outlined">Prescrever</Button>
