@@ -45,7 +45,7 @@ export const TabelaFilaAtendimento = () => {
                             </Stack>
                         </TableCell>
                         <TableCell>
-                            <Button component={Link} to={`/chamados/:id`} variant="contained" size="small">Abrir</Button>
+                            <Button component={Link} to={`/chamados/1`} variant="contained" size="small">Abrir</Button>
                         </TableCell>
                     </TableRow>
 

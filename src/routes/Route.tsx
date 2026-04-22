@@ -4,7 +4,7 @@ import { AppLayout } from "../layouts/AppLayout";
 import { FilaAtendimento } from "../pages/FilaAtendimento/FilaAtendimento";
 import { Paciente } from "../pages/Pacientes/Paciente";
 import { HistoricoChamados } from "../pages/HistoricoChamados/HistoricoChamados";
-import { DetalheChamado } from "../pages/DetalheChamado";
+import { DetalheChamado } from "../pages/DetalheChamado/DetalheChamado";
 import { NotFound } from "../pages/NotFound";
 
 export const router = createBrowserRouter([
@@ -30,7 +30,7 @@ export const router = createBrowserRouter([
         element: <HistoricoChamados />,
       },
       {
-        path: "/chamados:id",
+        path: "/chamados/1",
         element: <DetalheChamado />,
       },
     ],
