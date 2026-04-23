@@ -5,12 +5,15 @@ import { Busca } from "./components/Busca";
 import { ListaHistorico } from "./components/ListaHistorico";
 
 export const HistoricoChamados = () => {
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <HeaderHistorico />
       <Stats />
       <Busca />
       <ListaHistorico />
+    
+
     </Box>
   );
 };

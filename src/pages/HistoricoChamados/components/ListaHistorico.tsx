@@ -9,22 +9,28 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Link } from "react-router-dom";
 import PrioridadeBadge from "../../../components/PrioridadeBadge";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EventNoteIcon from "@mui/icons-material/EventNote";
+import { ProntuarioModal } from "../../../components/ProntuarioModal";
+import { useState } from "react";
 
 type Prioridade = "vermelho" | "laranja" | "amarelo" | "verde";
 type ChamadoStatus = "finalizado" | "cancelado";
 
-type Paciente = {
+export interface Paciente {
+  id: string;
   nome: string;
+  cpf: string;
   idade: number;
   sexo: "M" | "F";
-};
+  convenio?: string;
+  carteirinha?: string;
+  condicoesPreexistentes: string[];
+}
 
 type HistoricoItem = {
   id: number;
@@ -42,7 +48,14 @@ const filtrados: HistoricoItem[] = [
   {
     id: 1,
     senha: "A001",
-    paciente: { nome: "João Silva", idade: 45, sexo: "M" },
+    paciente: {
+      id: "1",
+      nome: "João Silva",
+      cpf: "000.000.000-00",
+      idade: 45,
+      sexo: "M",
+      condicoesPreexistentes: [],
+    },
     prioridade: "vermelho",
     diagnostico: "Infarto agudo do miocárdio",
     medico: "Dr. Paulo Roberto",
@@ -53,7 +66,14 @@ const filtrados: HistoricoItem[] = [
   {
     id: 2,
     senha: "A002",
-    paciente: { nome: "Maria Souza", idade: 29, sexo: "F" },
+    paciente: {
+      id: "2",
+      nome: "Maria Souza",
+      cpf: "111.111.111-11",
+      idade: 29,
+      sexo: "F",
+      condicoesPreexistentes: [],
+    },
     prioridade: "laranja",
     diagnostico: "Infecção respiratória",
     medico: "Dra. Fernanda Lima",
@@ -64,7 +84,14 @@ const filtrados: HistoricoItem[] = [
   {
     id: 3,
     senha: "A003",
-    paciente: { nome: "Carlos Lima", idade: 52, sexo: "M" },
+    paciente: {
+      id: "3",
+      nome: "Carlos Lima",
+      cpf: "222.222.222-22",
+      idade: 52,
+      sexo: "M",
+      condicoesPreexistentes: [],
+    },
     prioridade: "amarelo",
     diagnostico: "Cefaleia tensional",
     medico: "Dr. Ricardo Souza",
@@ -75,7 +102,14 @@ const filtrados: HistoricoItem[] = [
   {
     id: 4,
     senha: "A004",
-    paciente: { nome: "Ana Costa", idade: 34, sexo: "F" },
+    paciente: {
+      id: "4",
+      nome: "Ana Costa",
+      cpf: "333.333.333-33",
+      idade: 34,
+      sexo: "F",
+      condicoesPreexistentes: [],
+    },
     prioridade: "verde",
     diagnostico: "Vertigem",
     medico: "Dra. Juliana Alves",
@@ -93,6 +127,9 @@ const prioridadeColor: Record<Prioridade, string> = {
 };
 
 export const ListaHistorico = () => {
+  const [pacienteSelecionado, setPacienteSelecionado] =
+    useState<Paciente | null>(null);
+
   return (
     <>
       {filtrados.length === 0 ? (
@@ -231,8 +268,7 @@ export const ListaHistorico = () => {
                   </Stack>
 
                   <Button
-                    component={Link}
-                    to={`/chamados/${h.id}`}
+                    onClick={() => setPacienteSelecionado(h.paciente)}
                     variant="outlined"
                     size="small"
                     endIcon={<ArrowForwardIcon />}
@@ -243,6 +279,11 @@ export const ListaHistorico = () => {
               </CardContent>
             </Card>
           ))}
+          <ProntuarioModal
+            isOpen={!!pacienteSelecionado}
+            onClose={() => setPacienteSelecionado(null)}
+            paciente={pacienteSelecionado}
+          />
         </Stack>
       )}
     </>
