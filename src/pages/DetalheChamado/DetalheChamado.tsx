@@ -4,6 +4,7 @@ import { HeaderDetalhe } from "./components/HeaderDetalhe";
 import { PacienteInfo } from "./components/PacienteInfo";
 import { AlertasEventos } from "./components/AlertasEventos";
 import { SintomaPaciente } from "./components/SintomaPaciente";
+import { chamadoMock } from "../../mock/chamadoMock";
 
 export const DetalheChamado = () => {
   const { id } = useParams();
@@ -27,7 +28,7 @@ export const DetalheChamado = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <HeaderDetalhe id={idNumber} />
+      <HeaderDetalhe id={idNumber} chamado={chamadoMock} />
 
       <Grid container spacing={3}>
         <PacienteInfo id={idNumber} />
