@@ -28,7 +28,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 // import PrintIcon from "@mui/icons-material/Print";
 import type { Chamado } from "../mock/chamadoMock";
 
-interface Props {
+interface PrescricaoModalProps {
   open: boolean;
   onClose: () => void;
   chamado: Chamado | null;
@@ -64,7 +64,7 @@ const examesSugeridos = [
 
 const medicamentoVazio: Medicamento = { nome: "", dose: "", via: "Oral", frequencia: "", duracao: "" };
 
-export default function PrescricaoModal({ open, onClose, chamado, onConfirm }: Props) {
+export default function PrescricaoModal({ open, onClose, chamado, onConfirm }: PrescricaoModalProps) {
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
   const [novoMed, setNovoMed] = useState<Medicamento>(medicamentoVazio);
   const [exames, setExames] = useState<string[]>([]);

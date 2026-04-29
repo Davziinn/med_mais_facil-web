@@ -1,15 +1,15 @@
 import { Chip } from "@mui/material";
 
-export type Prioridade = "vermelho" | "laranja" | "amarelo" | "verde";
+export type ChipPrioridadeCor = "vermelho" | "laranja" | "amarelo" | "verde";
 
-const config: Record<Prioridade, { label: string; color: "error" | "warning" | "info" | "success" }> = {
+const config: Record<ChipPrioridadeCor, { label: string; color: "error" | "warning" | "info" | "success" }> = {
   vermelho: { label: "Emergência", color: "error" },
   laranja: { label: "Urgente", color: "warning" },
   amarelo: { label: "Moderado", color: "info" },
   verde: { label: "Baixa", color: "success" },
 };
 
-export default function PrioridadeBadge({ prioridade }: { prioridade: Prioridade }) {
+export default function PrioridadeBadge({ prioridade }: { prioridade: ChipPrioridadeCor }) {
   const c = config[prioridade];
   return <Chip label={c.label} color={c.color} size="small" />;
 }

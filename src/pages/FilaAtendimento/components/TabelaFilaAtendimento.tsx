@@ -14,83 +14,11 @@ import PrioridadeBadge from "../../../components/PrioridadeBadge";
 import StatusBadge from "../../../components/StatusBadge";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { Link } from "react-router-dom";
-
-type Chamado = {
-  id: number;
-  senha: string;
-  nome: string;
-  idade: number;
-  sexo: string;
-  queixa: string;
-  prioridade: "verde" | "amarelo" | "vermelho" | "laranja";
-  status:
-    | "aguardando"
-    | "cancelado"
-    | "em_triagem"
-    | "finalizado"
-    | "em_atendimento";
-  espera: string;
-};
-
-const chamados: Chamado[] = [
-  {
-    id: 1,
-    senha: "A001",
-    nome: "John Doe",
-    idade: 45,
-    sexo: "Masculino",
-    queixa: "Dor de cabeça",
-    prioridade: "verde",
-    status: "aguardando",
-    espera: "35 min",
-  },
-  {
-    id: 2,
-    senha: "A002",
-    nome: "Jane Smith",
-    idade: 30,
-    sexo: "Feminino",
-    queixa: "Febre",
-    prioridade: "amarelo",
-    status: "cancelado",
-    espera: "-",
-  },
-  {
-    id: 3,
-    senha: "A003",
-    nome: "Dente Yuohan",
-    idade: 3,
-    sexo: "Masculino",
-    queixa: "Morte",
-    prioridade: "vermelho",
-    status: "em_triagem",
-    espera: "15 min",
-  },
-  {
-    id: 4,
-    senha: "A004",
-    nome: "Jonan Dua",
-    idade: 22,
-    sexo: "Feminino",
-    queixa: "Dor de pescoço",
-    prioridade: "laranja",
-    status: "finalizado",
-    espera: "-",
-  },
-  {
-    id: 5,
-    senha: "A005",
-    nome: "Nilole Cripte",
-    idade: 35,
-    sexo: "Feminino",
-    queixa: "Gripe",
-    prioridade: "vermelho",
-    status: "em_atendimento",
-    espera: "-",
-  },
-];
+import { useFilaAtendimento } from "../../../hooks/useFilaAtendimento";
 
 export const TabelaFilaAtendimento = () => {
+  const { filaAtendimento } = useFilaAtendimento();
+
   return (
     <TableContainer>
       <Table>
@@ -107,11 +35,11 @@ export const TabelaFilaAtendimento = () => {
         </TableHead>
 
         <TableBody>
-          {chamados.map((c) => (
-            <TableRow key={c.id}>
+          {filaAtendimento.map((fila) => (
+            <TableRow key={fila.id}>
               <TableCell>
                 <Chip
-                  label={c.senha}
+                  label={fila.senha}
                   color="primary"
                   variant="outlined"
                   size="small"
@@ -121,23 +49,24 @@ export const TabelaFilaAtendimento = () => {
 
               <TableCell>
                 <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {c.nome}
+                  {fila.paciente.nome}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {c.idade} anos · {c.sexo}
+                  {fila.paciente.idade} {' '}
+                  ano(s) · {fila.paciente.sexo}
                 </Typography>
               </TableCell>
 
               <TableCell>
-                <Typography variant="body2">{c.queixa}</Typography>
+                <Typography variant="body2">{fila.queixa}</Typography>
               </TableCell>
 
               <TableCell>
-                <PrioridadeBadge prioridade={c.prioridade} />
+                <PrioridadeBadge prioridade={fila.prioridadeChamado} />
               </TableCell>
 
               <TableCell>
-                <StatusBadge status={c.status} />
+                <StatusBadge status={fila.statusChamado} />
               </TableCell>
 
               <TableCell>
@@ -150,7 +79,7 @@ export const TabelaFilaAtendimento = () => {
                     sx={{ fontSize: 14, color: "text.secondary" }}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    {c.espera}
+                    {fila.tempoEspera} min
                   </Typography>
                 </Stack>
               </TableCell>
@@ -158,7 +87,7 @@ export const TabelaFilaAtendimento = () => {
               <TableCell align="right">
                 <Button
                   component={Link}
-                  to={`/chamados/${c.id}`}
+                  to={`/chamados/${fila.id}`}
                   variant="contained"
                   size="small"
                 >

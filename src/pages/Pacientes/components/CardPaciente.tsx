@@ -32,7 +32,7 @@ export const CardPaciente = () => {
                         </Box>
                     </Stack>
                     <Stack direction="row" spacing={0.5} sx={{ mt: 1.5, flexWrap: "wrap" }} useFlexGap>
-                        <Chip key={1} label="Gostosura demais da conta sô" size="small" color="warning" variant="outlined" sx={{ fontSize: "0.65rem" }} />
+                        <Chip key={1} label="Doente" size="small" color="warning" variant="outlined" sx={{ fontSize: "0.65rem" }} />
                     </Stack>
                 </CardContent>
             </Card>
