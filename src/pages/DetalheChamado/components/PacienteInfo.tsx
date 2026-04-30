@@ -9,39 +9,15 @@ import {
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import { Field } from "../../../components/Field";
+import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 
 interface PacienteInfoProps {
   id: number;
 }
 
-const pacientesMock = {
-  1: {
-    nome: "Davi Menezes",
-    cpf: "085.983.623-10",
-    idade: 21,
-    genero: "Masculino",
-    convenio: "CAMED · 0012345678",
-  },
-  2: {
-    nome: "João Silva",
-    cpf: "111.222.333-44",
-    idade: 30,
-    genero: "Masculino",
-    convenio: "Unimed",
-  },
-};
-
-const getPaciente = (id: number) =>
-  pacientesMock[id as keyof typeof pacientesMock] || {
-    nome: `Paciente ${id}`,
-    cpf: "000.000.000-00",
-    idade: 20,
-    genero: "Não informado",
-    convenio: "Plano não informado",
-  };
-
 export const PacienteInfo = ({ id }: PacienteInfoProps) => {
-  const paciente = getPaciente(id);
+
+  const { detalheChamado } = useDetalheChamado(id);
 
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
@@ -57,11 +33,11 @@ export const PacienteInfo = ({ id }: PacienteInfoProps) => {
           </Stack>
 
           <Stack spacing={1.5}>
-            <Field label="Nome" value={paciente.nome} />
-            <Field label="CPF" value={paciente.cpf} />
-            <Field label="Idade" value={`${paciente.idade} anos`} />
-            <Field label="Gênero" value={paciente.genero} />
-            <Field label="Convênio" value={paciente.convenio} />
+            <Field label="Nome" value={detalheChamado?.paciente.nome ?? '---'} />
+            <Field label="CPF" value={detalheChamado?.paciente.cpf ?? '---'} />
+            <Field label="Idade" value={`${detalheChamado?.paciente.idade ?? '---'} ano(s)`} />
+            <Field label="Gênero" value={detalheChamado?.paciente.sexo ?? '---'} />
+            <Field label="Convênio" value={/*detalheChamado?.paciente.convenio ?? '---'*/ '---'} />
           </Stack>
 
           <Divider sx={{ my: 2 }} />

@@ -14,68 +14,11 @@ import {
 import { Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import PrioridadeBadge from "../../../components/PrioridadeBadge";
-
-import type { Prioridade } from "../../../components/PrioridadeBadge";
-
-type Paciente = {
-  nome: string;
-};
-
-type Chamado = {
-  id: number;
-  senha: string;
-  paciente: Paciente;
-  queixaPrincipal: string;
-  prioridade: Prioridade;
-};
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const aguardando: Chamado[] = [
-  {
-    id: 1,
-    senha: "A001",
-    paciente: { nome: "João Silva" },
-    queixaPrincipal: "Dor no peito",
-    prioridade: "vermelho",
-  },
-  {
-    id: 2,
-    senha: "A002",
-    paciente: { nome: "Maria Souza" },
-    queixaPrincipal: "Febre alta",
-    prioridade: "laranja",
-  },
-  {
-    id: 3,
-    senha: "A003",
-    paciente: { nome: "Carlos Lima" },
-    queixaPrincipal: "Dor de cabeça",
-    prioridade: "amarelo",
-  },
-  {
-    id: 4,
-    senha: "A004",
-    paciente: { nome: "Ana Costa" },
-    queixaPrincipal: "Tontura",
-    prioridade: "verde",
-  },
-  {
-    id: 5,
-    senha: "A005",
-    paciente: { nome: "Pedro Santos" },
-    queixaPrincipal: "Falta de ar",
-    prioridade: "vermelho",
-  },
-  {
-    id: 6,
-    senha: "A006",
-    paciente: { nome: "Juliana Alves" },
-    queixaPrincipal: "Dor abdominal",
-    prioridade: "amarelo",
-  },
-];
+import { useFilaAtendimento } from "../../../hooks/useFilaAtendimento";
 
 export const FilaDeEspera = () => {
+  const { filaAtendimento } = useFilaAtendimento()
+  
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
       <Card sx={{ height: "100%" }}>
@@ -104,12 +47,12 @@ export const FilaDeEspera = () => {
         </Box>
         <Divider />
         <List disablePadding>
-          {aguardando.slice(0, 5).map((c, i) => (
+          {filaAtendimento.slice(0, 5).map((fila, i) => (
             <ListItemButton
-              key={c.id}
-              component={Link}
-              to={`/chamados/${c.id}`}
-              divider={i < aguardando.length - 1}
+              key={fila.id}
+              // component={Link}
+              // to={`/chamados/${c.id}`}
+              divider={i < filaAtendimento.length - 1}
             >
               <ListItemAvatar>
                 <Avatar
@@ -121,14 +64,14 @@ export const FilaDeEspera = () => {
                     fontWeight: 700,
                   }}
                 >
-                  {c.senha}
+                  {fila.senha}
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
-                primary={c.paciente.nome}
-                secondary={c.queixaPrincipal}
+                primary={fila.paciente.nome}
+                secondary={fila.queixa}
               />
-              <PrioridadeBadge prioridade={c.prioridade} />
+              <PrioridadeBadge prioridade={fila.prioridadeChamado} />
             </ListItemButton>
           ))}
         </List>

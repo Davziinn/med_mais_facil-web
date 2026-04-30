@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getFilaAtendimento } from "../service/api/filaAtendimento"
+import { getFilaAtendimento } from "../service/api/filaAtendimentoService"
 import { mapPrioridadeChamado, type FilaAtendimentoUI } from "../mappers/filaMapper"
 
 export const useFilaAtendimento = () => {

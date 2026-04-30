@@ -15,6 +15,7 @@ import AtendimentoModal from "../../../components/AtendimentoModal";
 import { useState } from "react";
 import PrescricaoModal from "../../../components/PrescricaoModal";
 import type { Chamado } from "../../../mock/chamadoMock";
+import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 
 interface HeaderDetalheProps {
   id: number;
@@ -26,6 +27,8 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
   const [prescricaoOpen, setPrescricaoOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const { detalheChamado } = useDetalheChamado(id);
+
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <IconButton component={Link} to="/fila">
@@ -35,11 +38,13 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
       <Box sx={{ flex: 1 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Chamado A00{id}
+            Senha {detalheChamado?.senha}
           </Typography>
 
-          <PrioridadeBadge prioridade="verde" />
-          <StatusBadge status="em_triagem" />
+          {detalheChamado && (
+            <PrioridadeBadge prioridade={detalheChamado?.prioridadeChamado} />
+          )}
+          <StatusBadge status={detalheChamado?.statusChamado} />
         </Stack>
 
         <Typography>

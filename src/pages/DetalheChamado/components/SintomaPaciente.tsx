@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 
 interface SintomaPacienteProps {
   id: number;
@@ -44,6 +45,8 @@ const getSintomas = (id: number) =>
 export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
   const sintomas = getSintomas(id);
 
+  const { detalheChamado } = useDetalheChamado(id)
+
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
       <Card>
@@ -62,7 +65,7 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
           </Typography>
 
           <Stack spacing={2}>
-            {sintomas.map((s, index) => (
+            {detalheChamado?.sintomas.map((sintoma, index) => (
               <Card key={index} variant="outlined" sx={{ p: 2 }}>
                 <Box
                   sx={{
@@ -73,18 +76,18 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
                   }}
                 >
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {s.nome}
+                    {sintoma.descricao}
                   </Typography>
 
                   <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                    {s.intensidade}/10
+                    {sintoma.intensidade}/10
                   </Typography>
                 </Box>
 
                 <LinearProgress
                   variant="determinate"
-                  value={s.intensidade * 10}
-                  color={intensityColor(s.intensidade)}
+                  value={sintoma.intensidade * 10}
+                  color={intensityColor(sintoma.intensidade)}
                   sx={{ height: 6, borderRadius: 3, mb: 1 }}
                 />
 
@@ -98,7 +101,7 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
                       sx={{ fontSize: 12, color: "text.secondary" }}
                     />
                     <Typography variant="caption" color="text.secondary">
-                      {s.tempo}
+                      {/*sintoma.tempo*/ "Tempo não informado"}
                     </Typography>
                   </Stack>
 
@@ -107,7 +110,7 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
                     color="text.secondary"
                     sx={{ textTransform: "capitalize" }}
                   >
-                    {s.tipo}
+                    {/*sintoma.tipo*/ "Tipo não informado"}
                   </Typography>
                 </Stack>
               </Card>

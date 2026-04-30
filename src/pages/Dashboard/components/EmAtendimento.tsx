@@ -31,19 +31,19 @@ export const emAtendimento: Chamado[] = [
     id: 1,
     paciente: { nome: "Lucas Andrade", idade: 32 },
     queixaPrincipal: "Dor no peito",
-    status: "em_atendimento",
+    status: "EM_ATENDIMENTO",
   },
   {
     id: 2,
     paciente: { nome: "Fernanda Lima", idade: 27 },
     queixaPrincipal: "Falta de ar",
-    status: "em_atendimento",
+    status: "EM_ATENDIMENTO",
   },
   {
     id: 3,
     paciente: { nome: "Ricardo Souza", idade: 45 },
     queixaPrincipal: "Tontura",
-    status: "em_triagem",
+    status: "CANCELADO",
   },
 ];
 
