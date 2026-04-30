@@ -2,6 +2,12 @@ import { Toolbar, Box, InputBase, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 
 export const Search = () => {
+  const currentDate = new Date().toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
   return (
     <Toolbar sx={{ gap: 2 }}>
       <Box
@@ -35,7 +41,7 @@ export const Search = () => {
           variant="body2"
           sx={{ fontWeight: 500, color: "text.primary" }}
         >
-          14 Mar 2026
+          {currentDate}
         </Typography>
       </Box>
     </Toolbar>
