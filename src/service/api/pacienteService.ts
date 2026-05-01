@@ -9,6 +9,6 @@ export interface PacienteResponseDTO {
 }
 
 export const getListaPaciente = async (): Promise<PacienteResponseDTO[]> => {
-  const response = await api.get<PacienteResponseDTO[]>("/v1/paciente");
+  const response = await api.get<PacienteResponseDTO[]>("/paciente");
   return response.data;
 };

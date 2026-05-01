@@ -24,6 +24,6 @@ export interface FilaAtendimentoResponseDTO {
 }
 
 export const getFilaAtendimento = async (): Promise<FilaAtendimentoResponseDTO[]> => {
-    const response = await api.get<FilaAtendimentoResponseDTO[]>('/v1/chamado')
+    const response = await api.get<FilaAtendimentoResponseDTO[]>('/chamado')
     return response.data;
 }

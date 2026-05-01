@@ -19,6 +19,6 @@ export interface DetalheChamadoResponseDTO {
 export const getDetalheChamado = async (
   id: number,
 ): Promise<DetalheChamadoResponseDTO> => {
-  const response = await api.get<DetalheChamadoResponseDTO>(`/v1/chamado/detalhes/${id}`);
+  const response = await api.get<DetalheChamadoResponseDTO>(`/chamado/detalhes/${id}`);
   return response.data;
 };
