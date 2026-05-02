@@ -7,6 +7,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import StopCircleIcon from "@mui/icons-material/StopCircle";
 import { Link } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PrioridadeBadge from "../../../components/PrioridadeBadge";
@@ -16,6 +17,8 @@ import { useState } from "react";
 import PrescricaoModal from "../../../components/PrescricaoModal";
 import type { Chamado } from "../../../mock/chamadoMock";
 import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
+import { useIniciarAtendimento } from "../../../hooks/useIniciarAtendimento";
+import { useEncerrarAtendimento } from "../../../hooks/useEncerrarAtendimento";
 
 interface HeaderDetalheProps {
   id: number;
@@ -26,8 +29,36 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
   const [atendimentoOpen, setAtendimentoOpen] = useState(false);
   const [prescricaoOpen, setPrescricaoOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [atendimentoId, setAtedimentoId] = useState<number | null>(null);
+  const [atendimentoConfirmado, setAtendimentoConfirmado] = useState(false);
+  const [prescricaoFeita, setPrescricaoFeita] = useState(false);
+  const [atendimentoEncerrado, setAtendimentoEncerrado] = useState(false);
+
+  const podeEncerrar =
+    atendimentoConfirmado && prescricaoFeita && !atendimentoEncerrado;
 
   const { detalheChamado } = useDetalheChamado(id);
+  const { iniciarAtendimento } = useIniciarAtendimento();
+  const { encerrarAtendimento } = useEncerrarAtendimento();
+
+  const handleIniciarAtendimento = async () => {
+    const resultado = await iniciarAtendimento(id, 1);
+    if (resultado) {
+      setAtedimentoId(resultado.id);
+      setAtendimentoOpen(true);
+    }
+  };
+
+  const handleEncerrarAtendimento = async () => {
+    if (!atendimentoId) return;
+
+    const resultado = await encerrarAtendimento(atendimentoId);
+
+    if (resultado) {
+      setAtendimentoEncerrado(true);
+      setFeedback("Atendimento encerrado com sucesso!");
+    }
+  };
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -53,25 +84,50 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
       </Box>
 
       <Stack direction="row" spacing={1}>
-        <Button variant="contained" onClick={() => setAtendimentoOpen(true)}>
+        <Button
+          variant="contained"
+          onClick={handleIniciarAtendimento}
+          disabled={atendimentoEncerrado}
+        >
           Iniciar Atendimento
         </Button>
-        <Button variant="outlined" onClick={() => setPrescricaoOpen(true)}>
+        <Button
+          variant="outlined"
+          onClick={() => setPrescricaoOpen(true)}
+          disabled={atendimentoEncerrado}
+        >
           Prescrever
         </Button>
+        {podeEncerrar && (
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<StopCircleIcon />}
+            onClick={handleEncerrarAtendimento}
+          >
+            Encerrar Atendimento
+          </Button>
+        )}
       </Stack>
 
       <AtendimentoModal
         open={atendimentoOpen}
         onClose={() => setAtendimentoOpen(false)}
         chamado={chamado}
-        onConfirm={() => setFeedback("Atendimento registrado com sucesso!")}
+        onConfirm={() => {
+          setAtendimentoConfirmado(true);
+          setFeedback("Atendimento registrado com sucesso!");
+        }}
+        atendimentoId={atendimentoId}
       />
       <PrescricaoModal
         open={prescricaoOpen}
         onClose={() => setPrescricaoOpen(false)}
         chamado={chamado}
-        onConfirm={() => setFeedback("Prescrição salva com sucesso!")}
+        onConfirm={() => {
+          setPrescricaoFeita(true);
+          setFeedback("Prescrição salva com sucesso!");
+        }}
       />
       <Snackbar
         open={!!feedback}

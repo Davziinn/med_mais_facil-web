@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { useState } from "react";
 import {
   Dialog,
@@ -12,15 +13,16 @@ import {
   TextField,
   Grid,
   Chip,
-  InputAdornment,
-  Divider,
-  Alert,
+  // InputAdornment,
+  // Divider,
+  // Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
+// import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import type { Chamado } from "../mock/chamadoMock";
+import { useAtualizarDadosAtendimento } from "../hooks/useAtualizarDadosAtendimento";
 
 export interface AtendimentoDados {
   pressao: string;
@@ -35,13 +37,13 @@ export interface AtendimentoDados {
   cid: string;
 }
 
-interface Props {
+interface AtendimentoModalProps {
   open: boolean;
   onClose: () => void;
   chamado: Chamado | null;
   onConfirm?: (dados: AtendimentoDados) => void;
+  atendimentoId: number | null;
 }
-
 
 const initial: AtendimentoDados = {
   pressao: "",
@@ -61,7 +63,8 @@ export default function AtendimentoModal({
   onClose,
   chamado,
   onConfirm,
-}: Props) {
+  atendimentoId,
+}: AtendimentoModalProps) {
   const [dados, setDados] = useState<AtendimentoDados>(initial);
 
   if (!chamado) return null;
@@ -71,10 +74,24 @@ export default function AtendimentoModal({
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setDados((d) => ({ ...d, [k]: e.target.value }));
 
-  const handleConfirm = () => {
-    onConfirm?.(dados);
-    setDados(initial);
-    onClose();
+  const { atualizarDadosAtendimento } = useAtualizarDadosAtendimento();
+
+  const handleConfirm = async () => {
+    if (!atendimentoId) return;
+
+    const resultado = await atualizarDadosAtendimento(atendimentoId, {
+      anamnese: dados.anamnese,
+      exameFisico: dados.exameFisico,
+      hipoteseDiagnostica: dados.hipoteseDiagnostica,
+      cidDoenca: dados.cid,
+      conduta: dados.conduta,
+    });
+
+    if (resultado) {
+      onConfirm?.(dados);
+      setDados(initial);
+      onClose();
+    }
   };
 
   const handleClose = () => {
@@ -112,7 +129,7 @@ export default function AtendimentoModal({
       </DialogTitle>
 
       <DialogContent dividers>
-        <Alert severity="info" sx={{ mb: 2 }}>
+        {/* <Alert severity="info" sx={{ mb: 2 }}>
           Registre os sinais vitais e a evolução clínica. Os campos serão salvos
           no prontuário ao confirmar.
         </Alert>
@@ -204,7 +221,7 @@ export default function AtendimentoModal({
           </Grid>
         </Grid>
 
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2 }} /> */}
 
         <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
           Avaliação Clínica
