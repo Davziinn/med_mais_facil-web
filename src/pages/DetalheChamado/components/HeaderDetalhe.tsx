@@ -128,6 +128,7 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
           setPrescricaoFeita(true);
           setFeedback("Prescrição salva com sucesso!");
         }}
+        atendimentoId={atendimentoId}
       />
       <Snackbar
         open={!!feedback}

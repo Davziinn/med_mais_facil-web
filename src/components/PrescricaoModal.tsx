@@ -27,12 +27,14 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 // import PrintIcon from "@mui/icons-material/Print";
 import type { Chamado } from "../mock/chamadoMock";
+import { useSalvarPrescricao } from "../hooks/useSalvarPrescricao";
 
 interface PrescricaoModalProps {
   open: boolean;
   onClose: () => void;
   chamado: Chamado | null;
   onConfirm?: (dados: PrescricaoDados) => void;
+  atendimentoId: number | null;
 }
 
 export interface Medicamento {
@@ -64,7 +66,7 @@ const examesSugeridos = [
 
 const medicamentoVazio: Medicamento = { nome: "", dose: "", via: "Oral", frequencia: "", duracao: "" };
 
-export default function PrescricaoModal({ open, onClose, chamado, onConfirm }: PrescricaoModalProps) {
+export default function PrescricaoModal({ open, onClose, chamado, onConfirm, atendimentoId }: PrescricaoModalProps) {
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
   const [novoMed, setNovoMed] = useState<Medicamento>(medicamentoVazio);
   const [exames, setExames] = useState<string[]>([]);
@@ -72,7 +74,32 @@ export default function PrescricaoModal({ open, onClose, chamado, onConfirm }: P
   const [orientacoes, setOrientacoes] = useState("");
   const [retorno, setRetorno] = useState("");
 
+  const { salvarPrescricao } = useSalvarPrescricao()
+
   if (!chamado) return null;
+
+  const handleSalvarPrescricao = async () => {
+    if (atendimentoId === null) return; 
+    
+    const data = await salvarPrescricao(atendimentoId, {
+        orientacoes,
+        retornoConsulta: retorno,
+        exames: exames.join(", "),
+        medicamentos: medicamentos.map((medicamento) => ({
+          nome: medicamento.nome,
+          dose: medicamento.dose,
+          frequencia: medicamento.frequencia,
+          duracao: medicamento.duracao,
+          via: medicamento.via
+        }))
+      })
+
+      if (data) {
+        onConfirm?.({ medicamentos, exames, orientacoes, retorno }); // avisa o pai
+        reset();
+        onClose();
+    }
+  }
 
   const reset = () => {
     setMedicamentos([]);
@@ -105,12 +132,6 @@ export default function PrescricaoModal({ open, onClose, chamado, onConfirm }: P
   };
 
   const removerExame = (e: string) => setExames((arr) => arr.filter((x) => x !== e));
-
-  const handleConfirm = () => {
-    onConfirm?.({ medicamentos, exames, orientacoes, retorno });
-    reset();
-    onClose();
-  };
 
   const podeConfirmar = medicamentos.length > 0 || exames.length > 0;
 
@@ -275,7 +296,7 @@ export default function PrescricaoModal({ open, onClose, chamado, onConfirm }: P
         {/* <Button startIcon={<PrintIcon />} disabled={!podeConfirmar}>
           Imprimir
         </Button> */}
-        <Button onClick={handleConfirm} variant="contained" disabled={!podeConfirmar}>
+        <Button onClick={handleSalvarPrescricao} variant="contained" disabled={!podeConfirmar}>
           Salvar Prescrição
         </Button>
       </DialogActions>
