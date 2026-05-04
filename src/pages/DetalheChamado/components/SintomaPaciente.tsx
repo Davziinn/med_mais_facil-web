@@ -18,32 +18,8 @@ interface SintomaPacienteProps {
 const intensityColor = (v: number): "error" | "warning" | "success" =>
   v >= 8 ? "error" : v >= 5 ? "warning" : "success";
 
-const sintomasMock = {
-  1: [
-    {
-      nome: "Dor de Cabeça",
-      intensidade: 8,
-      tempo: "2 horas",
-      tipo: "Continuo",
-    },
-    {
-      nome: "Dor de Dente",
-      intensidade: 5,
-      tempo: "1 hora",
-      tipo: "Intermitente",
-    },
-  ],
-  2: [
-    { nome: "Febre", intensidade: 7, tempo: "3 horas", tipo: "Continuo" },
-    { nome: "Tosse", intensidade: 4, tempo: "2 horas", tipo: "Intermitente" },
-  ],
-};
-
-const getSintomas = (id: number) =>
-  sintomasMock[id as keyof typeof sintomasMock] || [];
 
 export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
-  const sintomas = getSintomas(id);
 
   const { detalheChamado } = useDetalheChamado(id)
 
@@ -61,7 +37,7 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
           </Stack>
 
           <Typography variant="body2" sx={{ fontWeight: 500, mb: 2 }}>
-            Queixa: {sintomas[0]?.nome || "Não informado"}
+            Queixa: {detalheChamado?.queixa || "Não informado"}
           </Typography>
 
           <Stack spacing={2}>
