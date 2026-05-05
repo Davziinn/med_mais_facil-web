@@ -9,30 +9,14 @@ import {
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import DescriptionIcon from "@mui/icons-material/Description";
+import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 
 interface AlertasEventosProps {
   id: number;
 }
 
-const alertasMock = {
-  1: {
-    sinais: ["Dor de Cabeça", "Dor de Dente"],
-    eventos: ["Queda há 3 dias", "Internação recente"],
-  },
-  2: {
-    sinais: ["Febre alta", "Tosse persistente"],
-    eventos: ["Consulta há 1 dia"],
-  },
-};
-
-const getAlertas = (id: number) =>
-  alertasMock[id as keyof typeof alertasMock] || {
-    sinais: [],
-    eventos: [],
-  };
-
 export const AlertasEventos = ({ id }: AlertasEventosProps) => {
-  const { sinais, eventos } = getAlertas(id);
+  const { detalheChamado } = useDetalheChamado(id);
 
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
@@ -55,10 +39,10 @@ export const AlertasEventos = ({ id }: AlertasEventosProps) => {
             </Stack>
 
             <Stack spacing={1}>
-              {sinais.map((s, index) => (
+              {detalheChamado?.sinaisAlertas.map((sinaisAlertas, index) => (
                 <Chip
                   key={index}
-                  label={s}
+                  label={sinaisAlertas.descricao}
                   color="error"
                   icon={<WarningAmberIcon />}
                   sx={{ justifyContent: "flex-start" }}
@@ -80,10 +64,10 @@ export const AlertasEventos = ({ id }: AlertasEventosProps) => {
             </Stack>
 
             <Stack spacing={1}>
-              {eventos.map((e, index) => (
+              {detalheChamado?.eventosClinicos.map((eventosClinicos) => (
                 <Chip
-                  key={index}
-                  label={e}
+                  key={eventosClinicos.id}
+                  label={eventosClinicos.descricao}
                   variant="outlined"
                   sx={{ justifyContent: "flex-start" }}
                 />
