@@ -7,8 +7,10 @@ import type {
 import type { PacienteResponseDTO } from "./pacienteService";
 import type { SintomaChamadoResponseDTO } from "./sintomaChamadoService";
 
+type Severidade = 'LEVE' | 'MODERADO' | 'CRITICO';
 export interface SinaisAlertaResponseDTO {
   descricao: string;
+  severidade: Severidade;
 }
 
 export interface DetalheChamadoResponseDTO {

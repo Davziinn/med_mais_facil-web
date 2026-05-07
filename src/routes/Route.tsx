@@ -3,9 +3,9 @@ import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { AppLayout } from "../layouts/AppLayout";
 import { FilaAtendimento } from "../pages/FilaAtendimento/FilaAtendimento";
 import { Paciente } from "../pages/Pacientes/Paciente";
-import { HistoricoChamados } from "../pages/HistoricoChamados/HistoricoChamados";
 import { DetalheChamado } from "../pages/DetalheChamado/DetalheChamado";
 import { NotFound } from "../pages/NotFound";
+import { HistoricoAtendimento } from "../pages/HistoricoChamados/HistoricoAtendimento";
 
 export const router = createBrowserRouter([
   {
@@ -27,7 +27,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "/chamados",
-        element: <HistoricoChamados />,
+        element: <HistoricoAtendimento />,
       },
       {
         path: "/chamados/:id",

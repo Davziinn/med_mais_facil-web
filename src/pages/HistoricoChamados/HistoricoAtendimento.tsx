@@ -4,7 +4,7 @@ import { Stats } from "./components/Stats";
 import { Busca } from "./components/Busca";
 import { ListaHistorico } from "./components/ListaHistorico";
 
-export const HistoricoChamados = () => {
+export const HistoricoAtendimento = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -12,8 +12,6 @@ export const HistoricoChamados = () => {
       <Stats />
       <Busca />
       <ListaHistorico />
-    
-
     </Box>
   );
 };

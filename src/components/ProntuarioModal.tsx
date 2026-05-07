@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import {
   Avatar,
   Box,
@@ -18,22 +19,13 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import MedicationIcon from "@mui/icons-material/Medication";
 import ScienceIcon from "@mui/icons-material/Science";
 import EventNoteIcon from "@mui/icons-material/EventNote";
-
-export interface Paciente {
-  id: string;
-  nome: string;
-  cpf: string;
-  idade: number;
-  sexo: "M" | "F";
-  convenio?: string;
-  carteirinha?: string;
-  condicoesPreexistentes: string[];
-}
+import CloseIcon from "@mui/icons-material/Close";
+import { usePaciente } from "../hooks/usePaciente";
 
 interface ProntuarioModalProps {
   isOpen: boolean;
   onClose: () => void;
-  paciente: Paciente | null;
+  paciente: string | null;
 }
 
 interface ProntuarioEntry {
@@ -48,6 +40,12 @@ interface ProntuarioEntry {
   exames: string[];
   status: "finalizado" | "cancelado";
 }
+
+const condicoesPreexistentesMock = [
+  "Hipertensão arterial",
+  "Diabetes tipo 2",
+  "Asma",
+];
 
 const prontuariosMock: ProntuarioEntry[] = [
   {
@@ -83,7 +81,7 @@ const prontuariosMock: ProntuarioEntry[] = [
   {
     id: "pr-1-2",
     data: "2026-02-01T09:00:00.000Z",
-    diagnostico: "CAVALO INFERTIL",
+    diagnostico: "Cefaleia tensional",
     medico: "Dra. Júlia Andrade",
     unidade: "Hospital São Lucas",
     queixa: "Dor de cabeça contínua há 5 horas",
@@ -101,14 +99,11 @@ export const ProntuarioModal = ({
 }: ProntuarioModalProps) => {
   if (!paciente) return null;
 
+  const { pacientes } = usePaciente();
+  const pacienteData = pacientes[1];
+
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      scroll="paper"
-    >
+    <Dialog open={isOpen} onClose={onClose} maxWidth="md" fullWidth scroll="paper">
       <DialogTitle sx={{ pr: 6 }}>
         <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
           <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
@@ -116,12 +111,12 @@ export const ProntuarioModal = ({
           </Avatar>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-              Prontuário do Paciente Guilherme Amaralo
+              {paciente}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {paciente.idade} anos ·{" "}
-              {paciente.sexo === "M" ? "Masculino" : "Feminino"} · CPF{" "}
-              {paciente.cpf}
+              {pacienteData?.idade} anos ·{" "}
+              {pacienteData?.sexo === "M" ? "Masculino" : "Feminino"} · CPF{" "}
+              {pacienteData?.cpf}
             </Typography>
           </Box>
         </Stack>
@@ -129,7 +124,9 @@ export const ProntuarioModal = ({
           onClick={onClose}
           sx={{ position: "absolute", right: 8, top: 8 }}
           aria-label="Fechar"
-        />
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
       <DialogContent dividers>
@@ -137,186 +134,119 @@ export const ProntuarioModal = ({
           <Typography variant="overline" color="text.secondary">
             Condições preexistentes
           </Typography>
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ flexWrap: "wrap", gap: 1, mt: 0.5 }}
-          >
-            {paciente.condicoesPreexistentes.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                Nenhuma condição registrada.
-              </Typography>
-            ) : (
-              paciente.condicoesPreexistentes.map((c) => (
-                <Chip
-                  key={c}
-                  label={c}
-                  size="small"
-                  color="warning"
-                  variant="outlined"
-                />
-              ))
-            )}
+          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, mt: 0.5 }}>
+            {condicoesPreexistentesMock.map((c) => (
+              <Chip key={c} label={c} size="small" color="warning" variant="outlined" />
+            ))}
           </Stack>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
-        <Typography>
-          Histórico de Atendimentos ({paciente.condicoesPreexistentes.length})
+        <Typography variant="subtitle2" sx={{ mb: 2 }}>
+          Histórico de Atendimentos ({prontuariosMock.length})
         </Typography>
 
         <Stack spacing={2}>
-          {prontuariosMock.map((prontuarioMock) => (
-            <Box
-              key={prontuarioMock.id}
-              sx={{
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 2,
-                p: 2,
-                position: "relative",
-              }}
-            >
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={1}
-                sx={{
-                  justifyContent: "space-between",
-                  alignItems: { sm: "flex-start" },
-                  mb: 1,
-                }}
-              >
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ alignItems: { sm: "flex-start" }, mb: 1 }}
-                  >
-                    <LocalHospitalIcon fontSize="small" color="primary" />
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      {prontuarioMock.diagnostico}
-                    </Typography>
-                  </Stack>
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    sx={{ alignItems: "center" }}
-                  >
-                    <AccessTimeIcon
-                      sx={{ fontSize: 14, color: "text.secondary" }}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(prontuarioMock.data).toLocaleString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
-                      · {prontuarioMock.medico} · {prontuarioMock.unidade}
-                    </Typography>
-                  </Stack>
-                </Box>
-                <Chip
-                  size="small"
-                  label={
-                    prontuarioMock.status === "finalizado"
-                      ? "Finalizado"
-                      : "Cancelado"
-                  }
-                  color={
-                    prontuarioMock.status === "finalizado" ? "success" : "error"
-                  }
-                  variant="outlined"
-                />
-              </Stack>
-
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Queixa Principal
-                </Typography>
-                <Typography variant="body2">{prontuarioMock.queixa}</Typography>
-              </Box>
-
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Conduta
-                </Typography>
-                <Typography variant="body2">
-                  {prontuarioMock.conduta}
-                </Typography>
-              </Box>
-
-              {prontuarioMock.prescricoes.length > 0 && (
-                <Box sx={{ mb: 1 }}>
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    sx={{ alignItems: "center", mb: 0.5 }}
-                  >
-                    <MedicationIcon
-                      sx={{ fontSize: 16, color: "text.secondary" }}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      Prescrições
-                    </Typography>
-                  </Stack>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ flexWrap: "wrap", gap: 0.5 }}
-                  >
-                    {prontuarioMock.prescricoes.map((m) => (
-                      <Chip key={m} label={m} size="small" variant="outlined" />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              {prontuarioMock.exames.length > 0 && (
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    sx={{ alignItems: "center", mb: 0.5 }}
-                  >
-                    <ScienceIcon
-                      sx={{ fontSize: 16, color: "text.secondary" }}
-                    />
-                    <Typography variant="caption" color="text.secondary">
-                      Exames solicitados
-                    </Typography>
-                  </Stack>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    sx={{ flexWrap: "wrap", gap: 0.5 }}
-                  >
-                    {prontuarioMock.exames.map((e) => (
-                      <Chip
-                        key={e}
-                        label={e}
-                        size="small"
-                        variant="outlined"
-                        color="info"
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-            </Box>
-          ))}
-
-          {prontuariosMock.length === 0 && (
+          {prontuariosMock.length === 0 ? (
             <Box sx={{ textAlign: "center", py: 4 }}>
-              <EventNoteIcon
-                sx={{ fontSize: 40, color: "text.disabled", mb: 1 }}
-              />
+              <EventNoteIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
               <Typography color="text.secondary">
                 Sem histórico de prontuários.
               </Typography>
             </Box>
+          ) : (
+            prontuariosMock.map((prontuarioMock) => (
+              <Box
+                key={prontuarioMock.id}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  p: 2,
+                }}
+              >
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1}
+                  sx={{ justifyContent: "space-between", alignItems: { sm: "flex-start" }, mb: 1 }}
+                >
+                  <Box>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 0.5 }}>
+                      <LocalHospitalIcon fontSize="small" color="primary" />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                        {prontuarioMock.diagnostico}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                      <AccessTimeIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(prontuarioMock.data).toLocaleString("pt-BR", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        · {prontuarioMock.medico} · {prontuarioMock.unidade}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                  <Chip
+                    size="small"
+                    label={prontuarioMock.status === "finalizado" ? "Finalizado" : "Cancelado"}
+                    color={prontuarioMock.status === "finalizado" ? "success" : "error"}
+                    variant="outlined"
+                  />
+                </Stack>
+
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Queixa Principal
+                  </Typography>
+                  <Typography variant="body2">{prontuarioMock.queixa}</Typography>
+                </Box>
+
+                <Box sx={{ mb: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Conduta
+                  </Typography>
+                  <Typography variant="body2">{prontuarioMock.conduta}</Typography>
+                </Box>
+
+                {prontuarioMock.prescricoes.length > 0 && (
+                  <Box sx={{ mb: 1 }}>
+                    <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", mb: 0.5 }}>
+                      <MedicationIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                      <Typography variant="caption" color="text.secondary">
+                        Prescrições
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 0.5 }}>
+                      {prontuarioMock.prescricoes.map((m) => (
+                        <Chip key={m} label={m} size="small" variant="outlined" />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+
+                {prontuarioMock.exames.length > 0 && (
+                  <Box>
+                    <Stack direction="row" spacing={0.5} sx={{ alignItems: "center", mb: 0.5 }}>
+                      <ScienceIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                      <Typography variant="caption" color="text.secondary">
+                        Exames solicitados
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 0.5 }}>
+                      {prontuarioMock.exames.map((e) => (
+                        <Chip key={e} label={e} size="small" variant="outlined" color="info" />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+              </Box>
+            ))
           )}
         </Stack>
       </DialogContent>

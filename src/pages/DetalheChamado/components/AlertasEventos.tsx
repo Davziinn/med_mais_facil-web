@@ -15,6 +15,24 @@ interface AlertasEventosProps {
   id: number;
 }
 
+const severidadeConfig = {
+  CRITICO: {
+    cor: "error" as const,
+    icone: <WarningAmberIcon fontSize="small" />,
+    label: "Crítico",
+  },
+  MODERADO: {
+    cor: "warning" as const,
+    icone: <WarningAmberIcon fontSize="small" />,
+    label: "Moderado",
+  },
+  LEVE: {
+    cor: "info" as const,
+    icone: <WarningAmberIcon fontSize="small" />,
+    label: "Leve",
+  },
+};
+
 export const AlertasEventos = ({ id }: AlertasEventosProps) => {
   const { detalheChamado } = useDetalheChamado(id);
 
@@ -39,15 +57,18 @@ export const AlertasEventos = ({ id }: AlertasEventosProps) => {
             </Stack>
 
             <Stack spacing={1}>
-              {detalheChamado?.sinaisAlertas.map((sinaisAlertas, index) => (
-                <Chip
-                  key={index}
-                  label={sinaisAlertas.descricao}
-                  color="error"
-                  icon={<WarningAmberIcon />}
-                  sx={{ justifyContent: "flex-start" }}
-                />
-              ))}
+              {detalheChamado?.sinaisAlertas.map((sinal, index) => {
+                const config = severidadeConfig[sinal.severidade];
+                return (
+                  <Chip
+                    key={index}
+                    label={sinal.descricao}
+                    color={config.cor}
+                    icon={config.icone}
+                    sx={{ justifyContent: "flex-start" }}
+                  />
+                );
+              })}
             </Stack>
           </CardContent>
         </Card>
