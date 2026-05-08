@@ -24,7 +24,7 @@ const prioridadeColor: Record<ChipPrioridadeCor, string> = {
 };
 
 export const ListaHistorico = () => {
-  const [pacienteSelecionado, setPacienteSelecionado] = useState<string | null>(null);
+  const [pacienteSelecionado, setPacienteSelecionado] = useState<{ id: number, nome: string } | null>(null);
   const { historicoAtendimento } = useListarHistoricoAtendimento();
 
   return (
@@ -156,7 +156,7 @@ export const ListaHistorico = () => {
                   </Stack>
 
                   <Button
-                    onClick={() => setPacienteSelecionado(historico.nomePaciente)}
+                    onClick={() => setPacienteSelecionado({ id: historico.pacienteId, nome: historico.nomePaciente })}
                     variant="outlined"
                     size="small"
                     endIcon={<ArrowForwardIcon />}
@@ -172,7 +172,8 @@ export const ListaHistorico = () => {
           <ProntuarioModal
             isOpen={!!pacienteSelecionado}
             onClose={() => setPacienteSelecionado(null)}
-            paciente={pacienteSelecionado}
+            paciente={pacienteSelecionado?.id ?? null}
+            nomePaciente={pacienteSelecionado?.nome ?? ""}
           />
         </Stack>
       )}

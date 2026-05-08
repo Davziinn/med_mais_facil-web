@@ -3,6 +3,7 @@ import type { PrioridadeChamadoResponseAPI, StatusChamadoResponseAPI } from "./f
 
 export interface HistoricoAtendimentoResponseDTO {
   atendimentoId: number;
+  pacienteId: number;
 //   senha: string,
   nomePaciente: string;
   idadePaciente: number;
