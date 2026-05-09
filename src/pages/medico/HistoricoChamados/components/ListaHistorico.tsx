@@ -3,8 +3,7 @@ import {
   Divider, Stack, Typography,
 } from "@mui/material";
 
-import PrioridadeBadge from "../../../components/PrioridadeBadge";
-import type { ChipPrioridadeCor } from "../../../components/PrioridadeBadge";
+
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -12,9 +11,10 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 
-import { ProntuarioModal } from "../../../components/ProntuarioModal";
 import { useState } from "react";
-import { useListarHistoricoAtendimento } from "../../../hooks/useListarHistoricoAtendimento";
+import PrioridadeBadge, { type ChipPrioridadeCor } from "../../../../components/PrioridadeBadge";
+import { ProntuarioModal } from "../../../../components/ProntuarioModal";
+import { useListarHistoricoAtendimento } from "../../../../hooks/useListarHistoricoAtendimento";
 
 const prioridadeColor: Record<ChipPrioridadeCor, string> = {
   vermelho: "#ef4444",

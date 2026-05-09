@@ -4,7 +4,7 @@ import { HeaderDetalhe } from "./components/HeaderDetalhe";
 import { PacienteInfo } from "./components/PacienteInfo";
 import { AlertasEventos } from "./components/AlertasEventos";
 import { SintomaPaciente } from "./components/SintomaPaciente";
-import { chamadoMock } from "../../mock/chamadoMock";
+import { chamadoMock } from "../../../mock/chamadoMock";
 
 export const DetalheChamado = () => {
   const { id } = useParams();

@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { PrioridadeChamadoResponseAPI, StatusChamadoResponseAPI } from "./filaAtendimentoService";
+import type { PrioridadeChamadoResponseAPI, StatusChamadoResponseAPI } from "./filaEsperaService";
 
 export interface HistoricoAtendimentoResponseDTO {
   atendimentoId: number;

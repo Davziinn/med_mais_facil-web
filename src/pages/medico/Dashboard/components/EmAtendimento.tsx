@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   Box,
   Card,
@@ -8,46 +9,18 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import StatusBadge, {
-  type ChamadoStatus,
-} from "../../../components/StatusBadge";
 import { Link } from "react-router-dom";
-
-type Paciente = {
-  nome: string;
-  idade: number;
-};
-
-type Chamado = {
-  id: number;
-  paciente: Paciente;
-  queixaPrincipal: string;
-  status: ChamadoStatus;
-};
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const emAtendimento: Chamado[] = [
-  {
-    id: 1,
-    paciente: { nome: "Lucas Andrade", idade: 32 },
-    queixaPrincipal: "Dor no peito",
-    status: "EM_ATENDIMENTO",
-  },
-  {
-    id: 2,
-    paciente: { nome: "Fernanda Lima", idade: 27 },
-    queixaPrincipal: "Falta de ar",
-    status: "EM_ATENDIMENTO",
-  },
-  {
-    id: 3,
-    paciente: { nome: "Ricardo Souza", idade: 45 },
-    queixaPrincipal: "Tontura",
-    status: "CANCELADO",
-  },
-];
+import { useEffect } from "react";
+import StatusBadge from "../../../../components/StatusBadge";
+import { useFilaEmAtendimento } from "../../../../hooks/useFilaEmAtendimento";
 
 export const EmAtendimento = () => {
+  const { filaEmAtendimento, carregarFilaEmAtendimento } = useFilaEmAtendimento()
+  
+  useEffect(() => {
+    carregarFilaEmAtendimento();
+  }, [])
+
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
       <Card sx={{ height: "100%" }}>
@@ -57,7 +30,7 @@ export const EmAtendimento = () => {
           </Typography>
         </Box>
         <Divider />
-        {emAtendimento.length === 0 ? (
+        {filaEmAtendimento.length === 0 ? (
           <Box sx={{ p: 4, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
               Nenhum atendimento em andamento
@@ -65,12 +38,12 @@ export const EmAtendimento = () => {
           </Box>
         ) : (
           <List disablePadding>
-            {emAtendimento.map((c, i) => (
+            {filaEmAtendimento.map((item, i) => (
               <ListItemButton
-                key={c.id}
+                key={item.chamadoId}
                 component={Link}
-                to={`/chamados/${c.id}`}
-                divider={i < emAtendimento.length - 1}
+                to={`/chamados/${item.chamadoId}`}
+                divider={i < filaEmAtendimento.length - 1}
               >
                 <ListItemText
                   primary={
@@ -82,14 +55,14 @@ export const EmAtendimento = () => {
                       }}
                     >
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {c.paciente.nome}
+                        {item.nomePaciente}
                       </Typography>
-                      <StatusBadge status={c.status} />
+                      <StatusBadge status={item.statusChamado} />
                     </Box>
                   }
                   secondary={
                     <Typography variant="caption" color="text.secondary">
-                      {c.queixaPrincipal} · {c.paciente.idade} anos
+                      {item.descricaoRelato} · {item.idadePaciente} anos
                     </Typography>
                   }
                 />

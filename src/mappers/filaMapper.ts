@@ -1,7 +1,7 @@
 import type { ChipPrioridadeCor } from "../components/PrioridadeBadge";
-import type { FilaAtendimentoResponseDTO, PrioridadeChamadoResponseAPI, StatusChamadoResponseAPI } from "../service/api/filaAtendimentoService";
+import type { FilaEsperaResponseDTO, PrioridadeChamadoResponseAPI, StatusChamadoResponseAPI } from "../service/api/filaEsperaService";
 
-export type FilaAtendimentoUI = Omit<FilaAtendimentoResponseDTO, "prioridadeChamado"> & {
+export type FilaEsperaUI = Omit<FilaEsperaResponseDTO, "prioridadeChamado"> & {
     prioridadeChamado: ChipPrioridadeCor;
 }
 export const mapPrioridadeChamado = (prioridade: PrioridadeChamadoResponseAPI): ChipPrioridadeCor => {

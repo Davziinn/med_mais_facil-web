@@ -11,14 +11,15 @@ import {
   Typography,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-import PrioridadeBadge from "../../../components/PrioridadeBadge";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
-import type { Prioridade } from "../../../components/PrioridadeBadge";
+import PrioridadeBadge from "../../../../components/PrioridadeBadge";
 
 type Paciente = {
   nome: string;
 };
+
+type Prioridade = "vermelho" | "laranja" | "amarelo";
 
 type ChamadoAlerta = {
   id: number;

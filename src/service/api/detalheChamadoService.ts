@@ -3,7 +3,7 @@ import type { EventoClinicoResponseDTO } from "./eventoClinicoResponseDTO";
 import type {
   PrioridadeChamadoResponseAPI,
   StatusChamadoResponseAPI,
-} from "./filaAtendimentoService";
+} from "./filaEsperaService";
 import type { PacienteResponseDTO } from "./pacienteService";
 import type { SintomaChamadoResponseDTO } from "./sintomaChamadoService";
 

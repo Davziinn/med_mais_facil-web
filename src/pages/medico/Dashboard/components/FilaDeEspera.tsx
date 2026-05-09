@@ -13,11 +13,11 @@ import {
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import PrioridadeBadge from "../../../components/PrioridadeBadge";
-import { useFilaAtendimento } from "../../../hooks/useFilaAtendimento";
+import { useFilaEspera } from "../../../../hooks/useFilaEspera";
+import PrioridadeBadge from "../../../../components/PrioridadeBadge";
 
 export const FilaDeEspera = () => {
-  const { filaAtendimento } = useFilaAtendimento()
+  const { filaEspera } = useFilaEspera()
   
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
@@ -47,12 +47,12 @@ export const FilaDeEspera = () => {
         </Box>
         <Divider />
         <List disablePadding>
-          {filaAtendimento.slice(0, 5).map((fila, i) => (
+          {filaEspera.slice(0, 5).map((fila, i) => (
             <ListItemButton
               key={fila.id}
               // component={Link}
               // to={`/chamados/${c.id}`}
-              divider={i < filaAtendimento.length - 1}
+              divider={i < filaEspera.length - 1}
             >
               <ListItemAvatar>
                 <Avatar

@@ -1,9 +1,9 @@
 import { Grid } from "@mui/material"
-import { StatCard } from "../../../components/StatCard"
 import CancelIcon from "@mui/icons-material/Cancel";
 import HistoryIcon from "@mui/icons-material/History";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+// import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { StatCard } from "../../../../components/StatCard";
 
 export const Stats = () => {
     return (
@@ -36,12 +36,12 @@ export const Stats = () => {
       </Grid>
 
       <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
-        <StatCard
+        {/* <StatCard
           title="Duração Média"
           value={"38 min"}
           icon={<TrendingUpIcon />}
           color="#0284c7"
-        />
+        /> */}
       </Grid>
     </Grid>
     )

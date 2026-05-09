@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import { usePaciente } from "../../../hooks/usePaciente";
+import { usePaciente } from "../../../../hooks/usePaciente";
 
 export const HeaderPaciente = () => {
   const { pacientes } = usePaciente();

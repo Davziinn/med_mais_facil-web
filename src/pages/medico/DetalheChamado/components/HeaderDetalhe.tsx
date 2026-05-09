@@ -10,15 +10,17 @@ import {
 import StopCircleIcon from "@mui/icons-material/StopCircle";
 import { Link } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PrioridadeBadge from "../../../components/PrioridadeBadge";
-import StatusBadge from "../../../components/StatusBadge";
-import AtendimentoModal from "../../../components/AtendimentoModal";
+
 import { useState } from "react";
-import PrescricaoModal from "../../../components/PrescricaoModal";
-import type { Chamado } from "../../../mock/chamadoMock";
-import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
-import { useIniciarAtendimento } from "../../../hooks/useIniciarAtendimento";
-import { useEncerrarAtendimento } from "../../../hooks/useEncerrarAtendimento";
+import type { Chamado } from "../../../../mock/chamadoMock";
+import AtendimentoModal from "../../../../components/AtendimentoModal";
+import PrescricaoModal from "../../../../components/PrescricaoModal";
+import PrioridadeBadge from "../../../../components/PrioridadeBadge";
+import StatusBadge from "../../../../components/StatusBadge";
+import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
+import { useEncerrarAtendimento } from "../../../../hooks/useEncerrarAtendimento";
+import { useIniciarAtendimento } from "../../../../hooks/useIniciarAtendimento";
+
 
 interface HeaderDetalheProps {
   id: number;

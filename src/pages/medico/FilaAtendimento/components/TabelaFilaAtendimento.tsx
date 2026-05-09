@@ -10,14 +10,14 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import PrioridadeBadge from "../../../components/PrioridadeBadge";
-import StatusBadge from "../../../components/StatusBadge";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { Link } from "react-router-dom";
-import { useFilaAtendimento } from "../../../hooks/useFilaAtendimento";
+import { useFilaEspera } from "../../../../hooks/useFilaEspera";
+import PrioridadeBadge from "../../../../components/PrioridadeBadge";
+import StatusBadge from "../../../../components/StatusBadge";
 
 export const TabelaFilaAtendimento = () => {
-  const { filaAtendimento } = useFilaAtendimento();
+  const { filaEspera } = useFilaEspera();
 
   return (
     <TableContainer>
@@ -35,7 +35,7 @@ export const TabelaFilaAtendimento = () => {
         </TableHead>
 
         <TableBody>
-          {filaAtendimento.map((fila) => (
+          {filaEspera.map((fila) => (
             <TableRow key={fila.id}>
               <TableCell>
                 <Chip

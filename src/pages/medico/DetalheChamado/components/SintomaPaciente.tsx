@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
+import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
 
 interface SintomaPacienteProps {
   id: number;

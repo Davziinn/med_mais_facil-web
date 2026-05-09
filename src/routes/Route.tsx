@@ -1,11 +1,12 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { AppLayout } from "../layouts/AppLayout";
-import { FilaAtendimento } from "../pages/FilaAtendimento/FilaAtendimento";
-import { Paciente } from "../pages/Pacientes/Paciente";
-import { DetalheChamado } from "../pages/DetalheChamado/DetalheChamado";
 import { NotFound } from "../pages/NotFound";
-import { HistoricoAtendimento } from "../pages/HistoricoChamados/HistoricoAtendimento";
+import { Dashboard } from "../pages/medico/Dashboard/Dashboard";
+import { FilaAtendimento } from "../pages/medico/FilaAtendimento/FilaAtendimento";
+import { Paciente } from "../pages/medico/Pacientes/Paciente";
+import { HistoricoAtendimento } from "../pages/medico/HistoricoChamados/HistoricoAtendimento";
+import { DetalheChamado } from "../pages/medico/DetalheChamado/DetalheChamado";
+
 
 export const router = createBrowserRouter([
   {

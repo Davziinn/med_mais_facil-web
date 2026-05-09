@@ -8,8 +8,9 @@ import {
   Typography,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import { Field } from "../../../components/Field";
-import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
+import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
+import { Field } from "../../../../components/Field";
+
 
 interface PacienteInfoProps {
   id: number;

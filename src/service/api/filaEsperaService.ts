@@ -13,7 +13,7 @@ export type PrioridadeChamadoResponseAPI =
   | "ALTA"
   | "CRITICA";
 
-export interface FilaAtendimentoResponseDTO {
+export interface FilaEsperaResponseDTO {
     id: number;
     senha: string;
     paciente: PacienteResponseDTO;
@@ -23,7 +23,7 @@ export interface FilaAtendimentoResponseDTO {
     tempoEspera: number;
 }
 
-export const getFilaAtendimento = async (): Promise<FilaAtendimentoResponseDTO[]> => {
-    const response = await api.get<FilaAtendimentoResponseDTO[]>('/chamado')
+export const getFilaEspera = async (): Promise<FilaEsperaResponseDTO[]> => {
+    const response = await api.get<FilaEsperaResponseDTO[]>('/chamado')
     return response.data;
 }

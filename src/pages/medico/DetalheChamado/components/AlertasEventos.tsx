@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
+import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
 
 interface AlertasEventosProps {
   id: number;

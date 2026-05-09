@@ -1,6 +1,6 @@
 import type { ChipPrioridadeCor } from "../components/PrioridadeBadge";
 import type { DetalheChamadoResponseDTO } from "../service/api/detalheChamadoService";
-import type { PrioridadeChamadoResponseAPI } from "../service/api/filaAtendimentoService";
+import type { PrioridadeChamadoResponseAPI } from "../service/api/filaEsperaService";
 
 export type DetalheChamadoUI = Omit<DetalheChamadoResponseDTO, "prioridadeChamado"> & {
     prioridadeChamado: ChipPrioridadeCor;

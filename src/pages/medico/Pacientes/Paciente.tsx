@@ -1,7 +1,7 @@
 import { Box, Grid } from "@mui/material";
 import { HeaderPaciente } from "./components/HeaderPaciente";
 import { CardPaciente } from "./components/CardPaciente";
-import { usePaciente } from "../../hooks/usePaciente";
+import { usePaciente } from "../../../hooks/usePaciente";
 
 export const Paciente = () => {
   const { pacientes } = usePaciente();
