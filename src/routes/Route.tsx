@@ -6,7 +6,7 @@ import { FilaAtendimento } from "../pages/medico/FilaAtendimento/FilaAtendimento
 import { Paciente } from "../pages/medico/Pacientes/Paciente";
 import { HistoricoAtendimento } from "../pages/medico/HistoricoChamados/HistoricoAtendimento";
 import { DetalheChamado } from "../pages/medico/DetalheChamado/DetalheChamado";
-
+import Busca from "../pages/medico/Busca/Busca";
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +33,10 @@ export const router = createBrowserRouter([
       {
         path: "/chamados/:id",
         element: <DetalheChamado />,
+      },
+      {
+        path: "/busca",
+        element: <Busca />,
       },
     ],
   },

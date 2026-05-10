@@ -20,6 +20,7 @@ import StatusBadge from "../../../../components/StatusBadge";
 import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
 import { useEncerrarAtendimento } from "../../../../hooks/useEncerrarAtendimento";
 import { useIniciarAtendimento } from "../../../../hooks/useIniciarAtendimento";
+import { formatDateTime } from "../../../../utils/FormataTempo";
 
 
 interface HeaderDetalheProps {
@@ -81,7 +82,7 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
         </Stack>
 
         <Typography>
-          Aberto em {new Date().toLocaleString("pt-BR")} · Hospital Kra Lho
+          Aberto em {detalheChamado?.dataAbertura ? formatDateTime(detalheChamado.dataAbertura) : ""} · Hospital Kra Lho
         </Typography>
       </Box>
 

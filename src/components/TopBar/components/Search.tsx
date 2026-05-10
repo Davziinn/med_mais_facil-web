@@ -1,12 +1,25 @@
 import { Toolbar, Box, InputBase, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { useState } from "react";
 
-export const Search = () => {
+interface SearchProps {
+  onSearch: (nome: string) => void;
+}
+
+export const Search = ({ onSearch }: SearchProps) => {
+  const [busca, setBusca] = useState("");
+
   const currentDate = new Date().toLocaleString("pt-BR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && busca.trim()) {
+      onSearch(busca.trim());
+    }
+  };
 
   return (
     <Toolbar sx={{ gap: 2 }}>
@@ -23,24 +36,18 @@ export const Search = () => {
           borderColor: "divider",
         }}
       >
-        <SearchIcon
-          sx={{
-            color: "text.secondary",
-            mr: 1,
-            fontSize: 20,
-          }}
-        />
+        <SearchIcon sx={{ color: "text.secondary", mr: 1, fontSize: 20 }} />
         <InputBase
           placeholder="Buscar Paciente"
           sx={{ flex: 1, fontSize: "0.875rem" }}
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </Box>
 
       <Box sx={{ ml: "auto" }}>
-        <Typography
-          variant="body2"
-          sx={{ fontWeight: 500, color: "text.primary" }}
-        >
+        <Typography variant="body2" sx={{ fontWeight: 500, color: "text.primary" }}>
           {currentDate}
         </Typography>
       </Box>

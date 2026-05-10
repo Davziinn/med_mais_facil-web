@@ -19,6 +19,7 @@ export const Paciente = () => {
               cpf={paciente.cpf}
               idade={paciente.idade}
               sexo={paciente.sexo}
+              condicoesPreexistentes={paciente.condicoesPreexistentes}
             />
           );
         })}

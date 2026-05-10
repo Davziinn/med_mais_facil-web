@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { useFilaEspera } from "../../../../hooks/useFilaEspera";
 import PrioridadeBadge from "../../../../components/PrioridadeBadge";
 import StatusBadge from "../../../../components/StatusBadge";
+import { formatarTempo } from "../../../../utils/FormataTempo";
 
 export const TabelaFilaAtendimento = () => {
   const { filaEspera } = useFilaEspera();
@@ -79,7 +80,7 @@ export const TabelaFilaAtendimento = () => {
                     sx={{ fontSize: 14, color: "text.secondary" }}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    {fila.tempoEspera} min
+                    {formatarTempo(fila.tempoEspera)}
                   </Typography>
                 </Stack>
               </TableCell>

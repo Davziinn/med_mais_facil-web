@@ -16,6 +16,7 @@ interface CardPacienteProps {
   cpf: string;
   idade: number;
   sexo: string;
+  condicoesPreexistentes: string[];
 }
 
 export const CardPaciente = ({
@@ -24,6 +25,7 @@ export const CardPaciente = ({
   cpf,
   idade,
   sexo,
+  condicoesPreexistentes,
 }: CardPacienteProps) => {
   return (
     <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={id}>
@@ -74,14 +76,18 @@ export const CardPaciente = ({
             sx={{ mt: 1.5, flexWrap: "wrap" }}
             useFlexGap
           >
-            <Chip
-              key={1}
-              label="LEMBRAR DE PUXAR AS CONDIÇÕES PREEXISTENTES"
-              size="small"
-              color="warning"
-              variant="outlined"
-              sx={{ fontSize: "0.65rem" }}
-            />
+            {condicoesPreexistentes.map((condicao, index) => {
+              return (
+                <Chip
+                  key={index}
+                  label={condicao || "Sem condições preexistentes"}
+                  size="small"
+                  color="warning"
+                  variant="outlined"
+                  sx={{ fontSize: "0.65rem" }}
+                />
+              );
+            })}
           </Stack>
         </CardContent>
       </Card>

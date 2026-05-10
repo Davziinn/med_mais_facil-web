@@ -18,6 +18,7 @@ export interface DetalheChamadoResponseDTO {
   senha: string;
   statusChamado: StatusChamadoResponseAPI;
   prioridadeChamado: PrioridadeChamadoResponseAPI;
+  dataAbertura: Date;
   paciente: PacienteResponseDTO;
   queixa: string;
   sintomas: SintomaChamadoResponseDTO[];

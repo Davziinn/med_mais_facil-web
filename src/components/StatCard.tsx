@@ -2,7 +2,7 @@ import { Box, Card, CardContent, Typography } from "@mui/material";
 
 interface StatCardProps {
   title: string;
-  value: number | undefined;
+  value: number | undefined | string;
   icon: React.ReactNode;
   color: string;
 }

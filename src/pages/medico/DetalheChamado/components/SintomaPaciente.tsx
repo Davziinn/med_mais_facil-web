@@ -77,7 +77,7 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
                       sx={{ fontSize: 12, color: "text.secondary" }}
                     />
                     <Typography variant="caption" color="text.secondary">
-                      {/*sintoma.tempo*/ "Tempo não informado"}
+                      {sintoma.tempoSintoma || "Tempo não informado"}
                     </Typography>
                   </Stack>
 
@@ -86,7 +86,7 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
                     color="text.secondary"
                     sx={{ textTransform: "capitalize" }}
                   >
-                    {/*sintoma.tipo*/ "Tipo não informado"}
+                    {sintoma.frequencia || "Frequência não informada"}
                   </Typography>
                 </Stack>
               </Card>
