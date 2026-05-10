@@ -1,5 +1,5 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { useState } from "react";
+
 import {
   Dialog,
   DialogTitle,
@@ -13,16 +13,14 @@ import {
   TextField,
   Grid,
   Chip,
-  // InputAdornment,
-  // Divider,
-  // Alert,
 } from "@mui/material";
+
 import CloseIcon from "@mui/icons-material/Close";
-// import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import type { Chamado } from "../mock/chamadoMock";
+
 import { useAtualizarDadosAtendimento } from "../hooks/useAtualizarDadosAtendimento";
+import type { DetalheChamadoUI } from "../mappers/detalheMapper";
 
 export interface AtendimentoDados {
   pressao: string;
@@ -40,7 +38,7 @@ export interface AtendimentoDados {
 interface AtendimentoModalProps {
   open: boolean;
   onClose: () => void;
-  chamado: Chamado | null;
+  chamado: DetalheChamadoUI | null;
   onConfirm?: (dados: AtendimentoDados) => void;
   atendimentoId: number | null;
 }
@@ -67,14 +65,17 @@ export default function AtendimentoModal({
 }: AtendimentoModalProps) {
   const [dados, setDados] = useState<AtendimentoDados>(initial);
 
+  const { atualizarDadosAtendimento } = useAtualizarDadosAtendimento();
+
   if (!chamado) return null;
 
   const update =
     (k: keyof AtendimentoDados) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setDados((d) => ({ ...d, [k]: e.target.value }));
-
-  const { atualizarDadosAtendimento } = useAtualizarDadosAtendimento();
+      setDados((d) => ({
+        ...d,
+        [k]: e.target.value,
+      }));
 
   const handleConfirm = async () => {
     if (!atendimentoId) return;
@@ -90,12 +91,12 @@ export default function AtendimentoModal({
     if (resultado) {
       onConfirm?.(dados);
       setDados(initial);
+
       onClose();
     }
   };
 
   const handleClose = () => {
-    setDados(initial);
     onClose();
   };
 
@@ -110,18 +111,33 @@ export default function AtendimentoModal({
       <DialogTitle sx={{ pr: 6 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <AssignmentIcon color="primary" />
+
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-              Iniciar Atendimento · {chamado.senha}
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                lineHeight: 1.2,
+              }}
+            >
+              Atendimento · {chamado.senha}
             </Typography>
+
             <Typography variant="caption" color="text.secondary">
-              Paciente: {chamado.paciente.nome} · {chamado.queixaPrincipal}
+              Paciente: {chamado.paciente.nome}
+              {" · "}
+              {chamado.queixa}
             </Typography>
           </Box>
         </Stack>
+
         <IconButton
           onClick={handleClose}
-          sx={{ position: "absolute", right: 8, top: 8 }}
+          sx={{
+            position: "absolute",
+            right: 8,
+            top: 8,
+          }}
           aria-label="Fechar"
         >
           <CloseIcon />
@@ -129,103 +145,16 @@ export default function AtendimentoModal({
       </DialogTitle>
 
       <DialogContent dividers>
-        {/* <Alert severity="info" sx={{ mb: 2 }}>
-          Registre os sinais vitais e a evolução clínica. Os campos serão salvos
-          no prontuário ao confirmar.
-        </Alert>
-
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1 }}>
-          <MonitorHeartIcon color="error" fontSize="small" />
-          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-            Sinais Vitais
-          </Typography>
-        </Stack>
-        <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Pressão Arterial"
-              placeholder="120/80"
-              value={dados.pressao}
-              onChange={update("pressao")}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">°C</InputAdornment>
-                  ),
-                },
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Freq. Cardíaca"
-              placeholder="80"
-              value={dados.frequenciaCardiaca}
-              onChange={update("frequenciaCardiaca")}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">°C</InputAdornment>
-                  ),
-                },
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Temperatura"
-              placeholder="36.5"
-              value={dados.temperatura}
-              onChange={update("temperatura")}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">°C</InputAdornment>
-                  ),
-                },
-              }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Saturação O₂"
-              placeholder="98"
-              value={dados.saturacao}
-              onChange={update("saturacao")}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Glicemia"
-              placeholder="100"
-              value={dados.glicemia}
-              onChange={update("glicemia")}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">°C</InputAdornment>
-                  ),
-                },
-              }}
-            />
-          </Grid>
-        </Grid>
-
-        <Divider sx={{ mb: 2 }} /> */}
-
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 700,
+            mb: 1,
+          }}
+        >
           Avaliação Clínica
         </Typography>
+
         <Stack spacing={2}>
           <TextField
             label="Anamnese"
@@ -237,6 +166,7 @@ export default function AtendimentoModal({
             value={dados.anamnese}
             onChange={update("anamnese")}
           />
+
           <TextField
             label="Exame Físico"
             multiline
@@ -247,6 +177,7 @@ export default function AtendimentoModal({
             value={dados.exameFisico}
             onChange={update("exameFisico")}
           />
+
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 8 }}>
               <TextField
@@ -258,7 +189,8 @@ export default function AtendimentoModal({
                 onChange={update("hipoteseDiagnostica")}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 8 }}>
+
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 label="CID-10"
                 fullWidth
@@ -269,6 +201,7 @@ export default function AtendimentoModal({
               />
             </Grid>
           </Grid>
+
           <TextField
             label="Conduta"
             multiline
@@ -285,15 +218,20 @@ export default function AtendimentoModal({
           <Typography variant="caption" color="text.secondary">
             Sintomas relatados na triagem
           </Typography>
+
           <Stack
             direction="row"
             spacing={1}
-            sx={{ flexWrap: "wrap", gap: 1, mt: 0.5 }}
+            sx={{
+              flexWrap: "wrap",
+              gap: 1,
+              mt: 0.5,
+            }}
           >
             {chamado.sintomas.map((s) => (
               <Chip
-                key={s.nome}
-                label={`${s.nome} · ${s.intensidade}/10`}
+                key={s.id}
+                label={`${s.descricao} · ${s.intensidade}/10`}
                 size="small"
                 variant="outlined"
               />
@@ -303,7 +241,8 @@ export default function AtendimentoModal({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={handleClose}>Cancelar</Button>
+        <Button onClick={handleClose}>Fechar</Button>
+
         <Button
           onClick={handleConfirm}
           variant="contained"

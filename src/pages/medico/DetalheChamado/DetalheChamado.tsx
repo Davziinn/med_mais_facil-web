@@ -4,10 +4,12 @@ import { HeaderDetalhe } from "./components/HeaderDetalhe";
 import { PacienteInfo } from "./components/PacienteInfo";
 import { AlertasEventos } from "./components/AlertasEventos";
 import { SintomaPaciente } from "./components/SintomaPaciente";
-import { chamadoMock } from "../../../mock/chamadoMock";
+import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 
 export const DetalheChamado = () => {
   const { id } = useParams();
+  const idNumber = Number(id);
+  const { detalheChamado } = useDetalheChamado(idNumber);
 
   if (!id) {
     return (
@@ -20,15 +22,13 @@ export const DetalheChamado = () => {
     );
   }
 
-  const idNumber = Number(id);
-
   if (isNaN(idNumber)) {
     return <Typography>ID inválido</Typography>;
   }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <HeaderDetalhe id={idNumber} chamado={chamadoMock} />
+      <HeaderDetalhe id={idNumber} chamado={detalheChamado} />
 
       <Grid container spacing={3}>
         <PacienteInfo id={idNumber} />
