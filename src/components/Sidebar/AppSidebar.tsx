@@ -1,4 +1,5 @@
-import { Divider, Drawer } from "@mui/material";
+import { Divider, Drawer, Box } from "@mui/material";
+
 import { Logo } from "./components/Logo";
 import { NavList } from "./components/NavList";
 import { Footer } from "./components/Footer";
@@ -14,9 +15,14 @@ export const AppSidebar = () => {
       sx={{
         width: DRAWER_WIDTH,
         flexShrink: 0,
+
         "& .MuiDrawer-paper": {
           width: DRAWER_WIDTH,
           boxSizing: "border-box",
+          bgcolor: "#111827",
+          borderRight: "1px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          flexDirection: "column",
         },
       }}
     >
@@ -24,7 +30,11 @@ export const AppSidebar = () => {
 
       <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
 
-      <NavList />
+      <Box sx={{ flex: 1, overflowY: "auto" }}>
+        <NavList />
+      </Box>
+
+      <Divider sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
 
       <Footer />
     </Drawer>

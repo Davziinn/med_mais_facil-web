@@ -13,8 +13,23 @@ export const Logo = () => {
         minHeight: 64,
       }}
     >
-      <MonitorHeartIcon sx={{ color: "primary.main", fontSize: 28 }} />
-      <Typography variant="h6">Med+Fácil</Typography>
+      <MonitorHeartIcon
+        sx={{
+          color: "primary.main",
+          fontSize: 28,
+        }}
+      />
+
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          letterSpacing: "-0.02em",
+          color: "#eef2f7",
+        }}
+      >
+        Med+Fácil
+      </Typography>
     </Box>
   );
 };
