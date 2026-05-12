@@ -12,6 +12,10 @@ import { AppLayout } from "../layouts/AppLayout";
 import ProtectedRoute from "../components/ProntectedRoute";
 import { NotFound } from "../pages/NotFound";
 import { DashboardRecepcao } from "../pages/recepcao/Dashboard/DashboardRecepcao";
+import { Checkin } from "../pages/recepcao/Checkin/Checkin";
+import { RecepcaoFila } from "../pages/recepcao/FilaOperacional/FilaOperacional";
+import { BuscaPaciente } from "../pages/recepcao/BuscaPaciente";
+import { Encaminhamento } from "../pages/recepcao/Encaminhamento/Encaminhamento";
 
 /* Médico */
 
@@ -106,50 +110,50 @@ export const router = createBrowserRouter([
         ),
       },
 
-      // {
-      //   path: "/recepcao/checkin",
-      //   element: (
-      //     <ProtectedRoute roles={["recepcao"]}>
-      //       <RecepcaoCheckin />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "/recepcao/checkin",
+        element: (
+          <ProtectedRoute roles={["recepcao"]}>
+            <Checkin />
+          </ProtectedRoute>
+        ),
+      },
 
-      // {
-      //   path: "/recepcao/fila",
-      //   element: (
-      //     <ProtectedRoute roles={["recepcao"]}>
-      //       <RecepcaoFila />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "/recepcao/fila",
+        element: (
+          <ProtectedRoute roles={["recepcao"]}>
+            <RecepcaoFila />
+          </ProtectedRoute>
+        ),
+      },
 
-      // {
-      //   path: "/recepcao/busca",
-      //   element: (
-      //     <ProtectedRoute roles={["recepcao"]}>
-      //       <RecepcaoBusca />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "/recepcao/busca",
+        element: (
+          <ProtectedRoute roles={["recepcao"]}>
+            <BuscaPaciente />
+          </ProtectedRoute>
+        ),
+      },
 
-      // {
-      //   path: "/recepcao/encaminhamento",
-      //   element: (
-      //     <ProtectedRoute roles={["recepcao"]}>
-      //       <RecepcaoEncaminhamento />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "/recepcao/encaminhamento",
+        element: (
+          <ProtectedRoute roles={["recepcao"]}>
+            <Encaminhamento />
+          </ProtectedRoute>
+        ),
+      },
 
-      // {
-      //   path: "/recepcao/encaminhamento/:id",
-      //   element: (
-      //     <ProtectedRoute roles={["recepcao"]}>
-      //       <RecepcaoEncaminhamento />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "/recepcao/encaminhamento/:id",
+        element: (
+          <ProtectedRoute roles={["recepcao"]}>
+            <Encaminhamento />
+          </ProtectedRoute>
+        ),
+      },
 
       /* =========================
           ADM
