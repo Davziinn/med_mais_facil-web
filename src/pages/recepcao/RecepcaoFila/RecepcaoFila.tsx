@@ -35,86 +35,11 @@ import {
   PrioridadeTag,
 } from "../_shared";
 
-type Prioridade = "BAIXA" | "MEDIA" | "ALTA" | "CRITICA";
+import { useFilaEspera } from "../../../hooks/useFilaEspera";
 
-type StatusFila = "EM_ESPERA" | "FINALIZADO" | "EM_ATENDIMENTO" | "CANCELADO";
+import type { PrioridadeChamadoResponseAPI } from "../../../service/api/filaEsperaService";
 
-type PacienteFila = {
-  id: string;
-  senha: string;
-  prioridade: Prioridade;
-  status: StatusFila;
-  criadoEm: string;
-  chegouEm?: string;
-  queixaPrincipal: string;
-
-  paciente: {
-    nome: string;
-    idade: number;
-  };
-};
-
-const mockFila: PacienteFila[] = [
-  {
-    id: "1",
-    senha: "A001",
-    prioridade: "CRITICA",
-    status: "EM_ESPERA",
-    criadoEm: "2026-05-12T08:00:00",
-    chegouEm: "2026-05-12T08:10:00",
-    queixaPrincipal: "Dor no peito",
-
-    paciente: {
-      nome: "João Pedro",
-      idade: 56,
-    },
-  },
-
-  {
-    id: "2",
-    senha: "A002",
-    prioridade: "ALTA",
-    status: "FINALIZADO",
-    criadoEm: "2026-05-12T08:20:00",
-    chegouEm: "2026-05-12T08:25:00",
-    queixaPrincipal: "Febre alta",
-
-    paciente: {
-      nome: "Maria Clara",
-      idade: 29,
-    },
-  },
-
-  {
-    id: "3",
-    senha: "A003",
-    prioridade: "MEDIA",
-    status: "EM_ESPERA",
-    criadoEm: "2026-05-12T09:00:00",
-    chegouEm: "2026-05-12T09:02:00",
-    queixaPrincipal: "Dor de cabeça",
-
-    paciente: {
-      nome: "Carlos Henrique",
-      idade: 38,
-    },
-  },
-
-  {
-    id: "4",
-    senha: "A004",
-    prioridade: "BAIXA",
-    status: "EM_ATENDIMENTO",
-    criadoEm: "2026-05-12T09:15:00",
-    chegouEm: "2026-05-12T09:20:00",
-    queixaPrincipal: "Tosse leve",
-
-    paciente: {
-      nome: "Fernanda Lima",
-      idade: 21,
-    },
-  },
-];
+type Prioridade = PrioridadeChamadoResponseAPI;
 
 const PRIORIDADE_COR = {
   CRITICA: {
@@ -168,15 +93,11 @@ const FILTROS: {
   },
 ];
 
-function calcMinutos(data: string) {
-  const agora = new Date().getTime();
-
-  const criado = new Date(data).getTime();
-
-  return Math.floor((agora - criado) / 1000 / 60);
-}
-
 function formatTempo(min: number) {
+  if (!min && min !== 0) {
+    return "0 min";
+  }
+
   if (min < 60) {
     return `${min} min`;
   }
@@ -191,7 +112,7 @@ function formatTempo(min: number) {
 export const RecepcaoFila = () => {
   const navigate = useNavigate();
 
-  const [fila, setFila] = useState<PacienteFila[]>(mockFila);
+  const { filaEspera } = useFilaEspera();
 
   const [busca, setBusca] = useState("");
 
@@ -201,14 +122,14 @@ export const RecepcaoFila = () => {
 
   const [prioMenu, setPrioMenu] = useState<{
     el: HTMLElement;
-    id: string;
+    id: number;
   } | null>(null);
 
   const lista = useMemo(() => {
-    let r = fila;
+    let r = filaEspera;
 
     if (filtro !== "todos") {
-      r = r.filter((c) => c.prioridade === filtro);
+      r = r.filter((c) => c.prioridadeChamado === filtro);
     }
 
     if (busca.trim()) {
@@ -222,52 +143,16 @@ export const RecepcaoFila = () => {
     }
 
     return r;
-  }, [fila, busca, filtro]);
+  }, [filaEspera, busca, filtro]);
 
-  const chamarPaciente = (id: string) => {
-    setFila((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: "EM_ATENDIMENTO",
-            }
-          : item,
-      ),
-    );
-  };
-
-  const marcarAusente = (id: string) => {
-    setFila((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const cancelar = (id: string) => {
-    setFila((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const alterarPrioridade = (id: string, prioridade: Prioridade) => {
-    setFila((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              prioridade,
-            }
-          : item,
-      ),
-    );
-  };
-
-  const act = (label: string, fn: () => void) => {
-    fn();
-
+  const act = (label: string) => {
     setToast(label);
   };
 
   return (
     <PageShell
       title="Fila operacional"
-      subtitle={`${fila.length} pacientes na fila · atualizado em tempo real`}
+      subtitle={`${filaEspera.length} pacientes na fila · atualizado em tempo real`}
     >
       <Box
         sx={{
@@ -301,11 +186,9 @@ export const RecepcaoFila = () => {
           sx={{
             flex: 1,
             minWidth: 240,
-
             "& .MuiOutlinedInput-root": {
               color: TEXT,
               bgcolor: "rgba(0,0,0,0.2)",
-
               "& fieldset": {
                 borderColor: PANEL_BORDER,
               },
@@ -324,7 +207,6 @@ export const RecepcaoFila = () => {
               borderColor: PANEL_BORDER,
               textTransform: "none",
               px: 2,
-
               "&.Mui-selected": {
                 bgcolor: "rgba(96,165,250,0.15)",
                 color: "#60a5fa",
@@ -345,26 +227,18 @@ export const RecepcaoFila = () => {
         <Box
           sx={{
             display: "grid",
-
             gridTemplateColumns: {
               xs: "60px 1fr auto",
-
               md: "70px 110px 1fr 160px 140px 130px 200px",
             },
-
             gap: 2,
-
             px: 2.5,
             py: 1.5,
-
             borderBottom: `1px solid ${PANEL_BORDER}`,
-
             color: TEXT_DIM,
             fontSize: 11,
             fontWeight: 600,
-
             textTransform: "uppercase",
-
             letterSpacing: "0.05em",
           }}
         >
@@ -431,39 +305,30 @@ export const RecepcaoFila = () => {
           </Box>
         ) : (
           lista.map((c, idx) => {
-            const mins = calcMinutos(c.chegouEm ?? c.criadoEm);
+            const mins = c.tempoEspera;
 
             const longa = mins > 45;
 
-            const cor = PRIORIDADE_COR[c.prioridade];
+            const cor = PRIORIDADE_COR[c.prioridadeChamado];
 
             return (
               <Box
                 key={c.id}
                 sx={{
                   display: "grid",
-
                   gridTemplateColumns: {
                     xs: "60px 1fr auto",
-
                     md: "70px 110px 1fr 160px 140px 130px 200px",
                   },
-
                   gap: 2,
-
                   px: 2.5,
                   py: 2,
-
                   alignItems: "center",
-
                   borderBottom: `1px solid ${PANEL_BORDER}`,
-
                   borderLeft: `3px solid ${cor.dot}`,
-
                   "&:last-child": {
                     borderBottom: 0,
                   },
-
                   "&:hover": {
                     bgcolor: "rgba(255,255,255,0.02)",
                   },
@@ -485,11 +350,8 @@ export const RecepcaoFila = () => {
                       xs: "none",
                       md: "block",
                     },
-
                     fontFamily: "monospace",
-
                     fontWeight: 700,
-
                     color: "#60a5fa",
                   }}
                 >
@@ -513,7 +375,7 @@ export const RecepcaoFila = () => {
                       fontSize: 12,
                     }}
                   >
-                    {c.paciente.idade}a · {c.queixaPrincipal}
+                    {c.paciente.idade}a · {c.queixa}
                   </Typography>
                 </Box>
 
@@ -525,7 +387,7 @@ export const RecepcaoFila = () => {
                     },
                   }}
                 >
-                  <PrioridadeTag p={c.prioridade} />
+                  <PrioridadeTag p={c.prioridadeChamado} />
                 </Box>
 
                 <Box
@@ -539,18 +401,24 @@ export const RecepcaoFila = () => {
                   <Typography
                     sx={{
                       color:
-                        c.status === "EM_ATENDIMENTO" ? "#34d399" : "#fcd34d",
-
+                        c.statusChamado === "EM_ATENDIMENTO"
+                          ? "#34d399"
+                          : "#fcd34d",
                       fontSize: 13,
-
                       fontWeight: 500,
                     }}
                   >
-                    {c.status === "EM_ATENDIMENTO"
+                    {c.statusChamado === "EM_ATENDIMENTO"
                       ? "Em atendimento"
-                      : c.status === "EM_ESPERA"
+                      : c.statusChamado === "EM_ESPERA"
                         ? "Em espera"
-                        : "Aguardando"}
+                        : c.statusChamado === "AGUARDANDO_CHECKIN"
+                          ? "Aguardando check-in"
+                          : c.statusChamado === "FINALIZADO"
+                            ? "Finalizado"
+                            : c.statusChamado === "CANCELADO"
+                              ? "Cancelado"
+                              : "Ausente"}
                   </Typography>
                 </Box>
 
@@ -560,16 +428,13 @@ export const RecepcaoFila = () => {
                       xs: "none",
                       md: "flex",
                     },
-
                     alignItems: "center",
-
                     gap: 0.5,
                   }}
                 >
                   <AccessTimeIcon
                     sx={{
                       fontSize: 14,
-
                       color: longa ? "#fb7185" : TEXT_DIM,
                     }}
                   />
@@ -577,9 +442,7 @@ export const RecepcaoFila = () => {
                   <Typography
                     sx={{
                       fontSize: 13,
-
                       color: longa ? "#fb7185" : TEXT,
-
                       fontWeight: longa ? 700 : 500,
                     }}
                   >
@@ -600,9 +463,7 @@ export const RecepcaoFila = () => {
                       sx={{
                         color: "#34d399",
                       }}
-                      onClick={() =>
-                        act("Paciente chamado.", () => chamarPaciente(c.id))
-                      }
+                      onClick={() => act("Paciente chamado.")}
                     >
                       <CampaignIcon fontSize="small" />
                     </IconButton>
@@ -631,11 +492,7 @@ export const RecepcaoFila = () => {
                       sx={{
                         color: "#f87171",
                       }}
-                      onClick={() =>
-                        act("Paciente marcado como ausente.", () =>
-                          marcarAusente(c.id),
-                        )
-                      }
+                      onClick={() => act("Paciente marcado como ausente.")}
                     >
                       <PersonOffIcon fontSize="small" />
                     </IconButton>
@@ -661,9 +518,7 @@ export const RecepcaoFila = () => {
                       sx={{
                         color: TEXT_DIM,
                       }}
-                      onClick={() =>
-                        act("Atendimento cancelado.", () => cancelar(c.id))
-                      }
+                      onClick={() => act("Atendimento cancelado.")}
                     >
                       <CancelIcon fontSize="small" />
                     </IconButton>
@@ -693,12 +548,7 @@ export const RecepcaoFila = () => {
           <MenuItem
             key={p}
             onClick={() => {
-              if (prioMenu) {
-                act(
-                  `Prioridade alterada para ${PRIORIDADE_COR[p].label}.`,
-                  () => alterarPrioridade(prioMenu.id, p),
-                );
-              }
+              act(`Prioridade alterada para ${PRIORIDADE_COR[p].label}.`);
 
               setPrioMenu(null);
             }}

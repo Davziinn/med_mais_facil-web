@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect } from "react";
 import {
   Box,
   Grid,
@@ -19,21 +20,18 @@ import CallSplitIcon from "@mui/icons-material/CallSplit";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
 import { useNavigate } from "react-router-dom";
-import { 
-  panelSx, 
-  TEXT_DIM, 
-  TEXT, 
-  PageShell, 
-  PANEL_BORDER, 
-  PrioridadeTag, 
-  PresencaTag 
+import {
+  panelSx,
+  TEXT_DIM,
+  TEXT,
+  PageShell,
+  PANEL_BORDER,
+  PrioridadeTag,
 } from "../_shared";
-import { 
-  useRecepcao, 
-  calcMinutos, 
-  formatTempo, 
-  type RecepcaoChamado 
-} from "../../../contexts/RecepcaoContext";
+
+import { useFilaEspera } from "../../../hooks/useFilaEspera";
+import { useRecepcaoDashboard } from "../../../hooks/useRecepcaoDashboard";
+import { extrairApenasHoras } from "../../../utils/FormataTempo";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -59,24 +57,14 @@ function StatCard({ icon, label, value, color }: StatCardProps) {
       >
         {icon}
       </Box>
-
       <Box>
         <Typography
           variant="caption"
-          sx={{
-            color: TEXT_DIM,
-            textTransform: "uppercase",
-            letterSpacing: "0.04em",
-            fontSize: 11,
-          }}
+          sx={{ color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: 11 }}
         >
           {label}
         </Typography>
-
-        <Typography
-          variant="h5"
-          sx={{ color: TEXT, fontWeight: 700, lineHeight: 1.1, mt: 0.5 }}
-        >
+        <Typography variant="h5" sx={{ color: TEXT, fontWeight: 700, lineHeight: 1.1, mt: 0.5 }}>
           {value}
         </Typography>
       </Box>
@@ -84,31 +72,33 @@ function StatCard({ icon, label, value, color }: StatCardProps) {
   );
 }
 
+function formatTempo(min: number) {
+  if (!min && min !== 0) return "0 min";
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}h ${m}min`;
+}
+
 export const DashboardRecepcao = () => {
   const navigate = useNavigate();
-  const { itens, fila, fazerCheckin, marcarAusente, chamarPaciente } = useRecepcao();
 
-  const stats = useMemo(() => {
-    const aguardCheckin = itens.filter(
-      (c) => c.presenca === "aguardando_checkin"
-    ).length;
+  const { filaEspera, carregarFilaEspera } = useFilaEspera();
+  const { metricas, carregarMetricas } = useRecepcaoDashboard();
 
-    const aguardAtend = fila.filter(
-      (c) => c.status !== "em_atendimento"
-    ).length;
+  useEffect(() => {
+    carregarMetricas();
+  }, []);
 
-    const ausentes = itens.filter((c) => c.presenca === "ausente").length;
+  // Fila = pacientes EM_ESPERA ou EM_ATENDIMENTO
+  const fila = filaEspera.filter(
+    (c) => c.statusChamado === "EM_ESPERA" || c.statusChamado === "EM_ATENDIMENTO"
+  );
 
-    const tempos = fila.map((c) =>
-      calcMinutos(c.chegouEm ?? c.criadoEm)
-    );
-
-    const media = tempos.length
-      ? Math.round(tempos.reduce((a, b) => a + b, 0) / tempos.length)
-      : 0;
-
-    return { aguardCheckin, aguardAtend, ausentes, media };
-  }, [itens, fila]);
+  // Aguardando check-in
+  const aguardandoCheckin = filaEspera.filter(
+    (c) => c.statusChamado === "AGUARDANDO_CHECKIN"
+  );
 
   return (
     <PageShell
@@ -118,7 +108,7 @@ export const DashboardRecepcao = () => {
         <Tooltip title="Atualizar">
           <IconButton
             sx={{ color: TEXT_DIM, border: `1px solid ${PANEL_BORDER}` }}
-            onClick={() => window.location.reload()}
+            onClick={carregarFilaEspera}
           >
             <RefreshIcon />
           </IconButton>
@@ -131,37 +121,35 @@ export const DashboardRecepcao = () => {
           <StatCard
             icon={<HowToRegIcon />}
             label="Aguardando check-in"
-            value={stats.aguardCheckin}
+            value={metricas?.aguardandoCheckin || 0}
             color="#60a5fa"
           />
         </Grid>
-
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-
           <StatCard
             icon={<HourglassTopIcon />}
             label="Aguardando atendimento"
-            value={stats.aguardAtend}
+            value={metricas?.aguardando || 0}
             color="#fcd34d"
           />
         </Grid>
-
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-
           <StatCard
             icon={<PersonOffIcon />}
             label="Pacientes ausentes"
-            value={stats.ausentes}
+            value={metricas?.ausentes || 0}
             color="#f87171"
           />
         </Grid>
-
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-
           <StatCard
             icon={<AccessTimeIcon />}
             label="Tempo médio de espera"
-            value={`${stats.media}m`}
+            value={
+              metricas?.tempoMedioEspera
+                ? `${extrairApenasHoras(metricas.tempoMedioEspera)}m`
+                : "0m"
+            }
             color="#34d399"
           />
         </Grid>
@@ -169,7 +157,14 @@ export const DashboardRecepcao = () => {
 
       {/* FILA ATUAL */}
       <Box sx={{ ...panelSx }}>
-        <Box sx={{ p: 2.5, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box
+          sx={{
+            p: 2.5,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 600, color: TEXT }}>
               Fila atual
@@ -178,7 +173,6 @@ export const DashboardRecepcao = () => {
               Ordenada por prioridade clínica e tempo de espera
             </Typography>
           </Box>
-
           <Stack direction="row" spacing={1}>
             <Button
               size="small"
@@ -208,10 +202,8 @@ export const DashboardRecepcao = () => {
           </Box>
         ) : (
           <Box>
-            {fila.slice(0, 8).map((c: RecepcaoChamado, idx: number) => {
-              const mins = calcMinutos(c.chegouEm ?? c.criadoEm);
-              const longaEspera = mins > 45;
-
+            {fila.slice(0, 8).map((c, idx) => {
+              const longa = c.tempoEspera > 45;
               return (
                 <Box
                   key={c.id}
@@ -219,7 +211,7 @@ export const DashboardRecepcao = () => {
                     display: "grid",
                     gridTemplateColumns: {
                       xs: "40px 1fr auto",
-                      md: "60px 1fr 160px 140px 120px auto",
+                      md: "60px 1fr 160px 120px auto",
                     },
                     alignItems: "center",
                     gap: 2,
@@ -227,7 +219,7 @@ export const DashboardRecepcao = () => {
                     py: 2,
                     borderBottom: `1px solid ${PANEL_BORDER}`,
                     "&:last-child": { borderBottom: 0 },
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.02)" },
+                    "&:hover": { bgcolor: "rgba(0,0,0,0.01)" },
                   }}
                 >
                   <Box sx={{ fontWeight: 700, color: TEXT, fontSize: 14, fontFamily: "monospace" }}>
@@ -244,47 +236,39 @@ export const DashboardRecepcao = () => {
                   </Box>
 
                   <Box sx={{ display: { xs: "none", md: "block" } }}>
-                    <PrioridadeTag p={c.prioridade} />
+                    <PrioridadeTag p={c.prioridadeChamado} />
                   </Box>
 
-                  <Box sx={{ display: { xs: "none", md: "block" } }}>
-                    <PresencaTag s={c.presenca} />
-                  </Box>
-
-                  <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}>
-                    <AccessTimeIcon sx={{ fontSize: 14, color: longaEspera ? "#fb7185" : TEXT_DIM }} />
+                  <Box
+                    sx={{
+                      display: { xs: "none", md: "flex" },
+                      alignItems: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    <AccessTimeIcon sx={{ fontSize: 14, color: longa ? "#fb7185" : TEXT_DIM }} />
                     <Typography
                       sx={{
                         fontSize: 13,
-                        color: longaEspera ? "#fb7185" : TEXT_DIM,
-                        fontWeight: longaEspera ? 700 : 400,
+                        color: longa ? "#fb7185" : TEXT_DIM,
+                        fontWeight: longa ? 700 : 400,
                       }}
                     >
-                      {formatTempo(mins)}
+                      {formatTempo(c.tempoEspera)}
                     </Typography>
                   </Box>
 
                   <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
                     <Tooltip title="Chamar paciente">
-                      <IconButton
-                        size="small"
-                        sx={{ color: "#34d399" }}
-                        onClick={() => chamarPaciente(c.id)}
-                      >
+                      <IconButton size="small" sx={{ color: "#34d399" }}>
                         <CampaignIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-
                     <Tooltip title="Marcar ausência">
-                      <IconButton
-                        size="small"
-                        sx={{ color: "#f87171" }}
-                        onClick={() => marcarAusente(c.id)}
-                      >
+                      <IconButton size="small" sx={{ color: "#f87171" }}>
                         <PersonOffIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-
                     <Tooltip title="Encaminhar">
                       <IconButton
                         size="small"
@@ -315,58 +299,51 @@ export const DashboardRecepcao = () => {
 
         <Divider sx={{ borderColor: PANEL_BORDER }} />
 
-        {itens.filter((c) => c.presenca === "aguardando_checkin").length === 0 ? (
+        {aguardandoCheckin.length === 0 ? (
           <Box sx={{ p: 4, textAlign: "center", color: TEXT_DIM }}>
             Todos os pacientes confirmados.
           </Box>
         ) : (
-          itens
-            .filter((c) => c.presenca === "aguardando_checkin")
-            .map((c) => (
-              <Box
-                key={c.id}
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  px: 2.5,
-                  py: 1.5,
-                  borderBottom: `1px solid ${PANEL_BORDER}`,
-                  "&:last-child": { borderBottom: 0 },
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Box sx={{ fontFamily: "monospace", fontWeight: 700, color: TEXT, minWidth: 60 }}>
-                    {c.senha}
-                  </Box>
-                  <Box>
-                    <Typography sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}>
-                      {c.paciente.nome}
-                    </Typography>
-                    <PrioridadeTag p={c.prioridade} />
-                  </Box>
+          aguardandoCheckin.map((c) => (
+            <Box
+              key={c.id}
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                px: 2.5,
+                py: 1.5,
+                borderBottom: `1px solid ${PANEL_BORDER}`,
+                "&:last-child": { borderBottom: 0 },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box sx={{ fontFamily: "monospace", fontWeight: 700, color: TEXT, minWidth: 60 }}>
+                  {c.senha}
                 </Box>
-
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<HowToRegIcon />}
-                    onClick={() => fazerCheckin(c.id)}
-                  >
-                    Check-in
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ color: "#f87171", borderColor: "#f8717155" }}
-                    onClick={() => marcarAusente(c.id)}
-                  >
-                    Ausente
-                  </Button>
-                </Stack>
+                <Box>
+                  <Typography sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}>
+                    {c.paciente.nome}
+                  </Typography>
+                  <PrioridadeTag p={c.prioridadeChamado} />
+                </Box>
               </Box>
-            ))
+
+              <Stack direction="row" spacing={1}>
+                {/* onClick vazio até o endpoint de check-in estar pronto */}
+                <Button size="small" variant="contained" startIcon={<HowToRegIcon />}>
+                  Check-in
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  sx={{ color: "#f87171", borderColor: "#f8717155" }}
+                >
+                  Ausente
+                </Button>
+              </Stack>
+            </Box>
+          ))
         )}
       </Box>
     </PageShell>

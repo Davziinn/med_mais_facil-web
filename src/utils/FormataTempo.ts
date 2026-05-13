@@ -53,3 +53,23 @@ export const formatarTempo = (minutos: number) => {
 
   return `${mins}min`;
 };
+
+export function extrairApenasHoras(date?: Date | string | null): string {
+  if (!date) {
+    return "00:00:00";
+  }
+
+  const data = new Date(date);
+
+  if (isNaN(data.getTime())) {
+    return "00:00:00";
+  }
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  const horas = pad(data.getHours());
+  const minutos = pad(data.getMinutes());
+  const segundos = pad(data.getSeconds());
+
+  return `${horas}:${minutos}:${segundos}`;
+}

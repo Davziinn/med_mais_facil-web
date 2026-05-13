@@ -1,26 +1,23 @@
-import type { ChipPrioridadeCor } from "../components/PrioridadeBadge";
-import type { FilaEsperaResponseDTO, PrioridadeChamadoResponseAPI, StatusChamadoResponseAPI } from "../service/api/filaEsperaService";
+import type {
+  FilaEsperaResponseDTO,
+  PrioridadeChamadoResponseAPI,
+  StatusChamadoResponseAPI,
+} from "../service/api/filaEsperaService";
 
-export type FilaEsperaUI = Omit<FilaEsperaResponseDTO, "prioridadeChamado"> & {
-    prioridadeChamado: ChipPrioridadeCor;
-}
-export const mapPrioridadeChamado = (prioridade: PrioridadeChamadoResponseAPI): ChipPrioridadeCor => {
-    const map: Record<PrioridadeChamadoResponseAPI, ChipPrioridadeCor> ={
-        BAIXA: "verde",
-        MEDIA: "amarelo",
-        ALTA: "laranja",
-        CRITICA: "vermelho"
-    }
+export type FilaEsperaUI = FilaEsperaResponseDTO;
 
-    return map[prioridade]
-}
+export const mapPrioridadeChamado = (
+  prioridade: PrioridadeChamadoResponseAPI
+): PrioridadeChamadoResponseAPI => prioridade;
 
 export const mapStatusChamado = (status: StatusChamadoResponseAPI): string => {
-    const map: Record<StatusChamadoResponseAPI, string> = {
-        EM_ESPERA: "Em Espera",
-        EM_ATENDIMENTO: "Em Atendimento",
-        FINALIZADO: "Finalizado",
-        CANCELADO: "Cancelado"
-    }
-    return map[status]
-}
+  const map: Record<StatusChamadoResponseAPI, string> = {
+    EM_ESPERA: "Em Espera",
+    EM_ATENDIMENTO: "Em Atendimento",
+    FINALIZADO: "Finalizado",
+    CANCELADO: "Cancelado",
+    AGUARDANDO_CHECKIN: "Aguardando Check-in",
+    AUSENTE: "Ausente",
+  };
+  return map[status];
+};

@@ -2,9 +2,9 @@ import { useState } from "react";
 import {
   type DashboardMetricasResponseDTO,
   getDashboardMetricas,
-} from "../service/api/dashboard";
+} from "../service/api/medicoDashboard";
 
-export const useDashboardMetricas = () => {
+export const useMedicoDashboardMetricas = () => {
   const [metricas, setMetricas] = useState<DashboardMetricasResponseDTO | null>(null);
 
   const carregarMetricas = async () => {

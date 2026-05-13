@@ -13,7 +13,7 @@ import ProtectedRoute from "../components/ProntectedRoute";
 import { NotFound } from "../pages/NotFound";
 import { DashboardRecepcao } from "../pages/recepcao/Dashboard/DashboardRecepcao";
 import { Checkin } from "../pages/recepcao/Checkin/Checkin";
-import { RecepcaoFila } from "../pages/recepcao/FilaOperacional/FilaOperacional";
+import { RecepcaoFila } from "../pages/recepcao/RecepcaoFila/RecepcaoFila";
 import { BuscaPaciente } from "../pages/recepcao/BuscaPaciente";
 import { Encaminhamento } from "../pages/recepcao/Encaminhamento/Encaminhamento";
 

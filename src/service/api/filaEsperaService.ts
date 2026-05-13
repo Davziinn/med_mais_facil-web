@@ -2,10 +2,12 @@ import { api } from "./api";
 import type { PacienteResponseDTO } from "./pacienteService";
 
 export type StatusChamadoResponseAPI =
+  | "AGUARDANDO_CHECKIN"
   | "EM_ESPERA"
   | "EM_ATENDIMENTO"
   | "FINALIZADO"
-  | "CANCELADO";
+  | "CANCELADO"
+  | "AUSENTE";
 
 export type PrioridadeChamadoResponseAPI =
   | "BAIXA"

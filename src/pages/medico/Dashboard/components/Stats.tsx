@@ -6,10 +6,10 @@ import PersonIcon from "@mui/icons-material/Person";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useEffect } from "react";
 import { StatCard } from "../../../../components/StatCard";
-import { useDashboardMetricas } from "../../../../hooks/useDashboardMetricas";
+import { useMedicoDashboardMetricas } from "../../../../hooks/useMedicoDashboardMetricas";
 
 export const Stats = () => {
-  const { metricas, carregarMetricas } = useDashboardMetricas();
+  const { metricas, carregarMetricas } = useMedicoDashboardMetricas();
   
   useEffect(() => {
     carregarMetricas();
