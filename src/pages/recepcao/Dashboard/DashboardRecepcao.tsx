@@ -131,10 +131,23 @@ export const DashboardRecepcao = () => {
 
   const handleConfirmarAusente = async () => {
     if (!modalAusente.paciente) return;
+
     setLoadingAusente(true);
+
     await marcarPacienteComoAusente(modalAusente.paciente.id);
+
+    await Promise.all([
+      carregarFilaEspera(),
+      carregarFilaAguardandoCheckIn(),
+      carregarMetricas(),
+    ]);
+
     setLoadingAusente(false);
-    setModalAusente({ open: false, paciente: null });
+
+    setModalAusente({
+      open: false,
+      paciente: null,
+    });
   };
 
   useEffect(() => {
@@ -260,8 +273,8 @@ export const DashboardRecepcao = () => {
                   sx={{
                     display: "grid",
                     gridTemplateColumns: {
-                      xs: "40px 1fr auto",
-                      md: "60px 1fr 160px 120px auto",
+                      xs: "auto 1fr auto",
+                      md: "60px 1fr 160px 140px 120px auto",
                     },
                     alignItems: "center",
                     gap: 2,
@@ -269,9 +282,10 @@ export const DashboardRecepcao = () => {
                     py: 2,
                     borderBottom: `1px solid ${PANEL_BORDER}`,
                     "&:last-child": { borderBottom: 0 },
-                    "&:hover": { bgcolor: "rgba(0,0,0,0.01)" },
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.02)" },
                   }}
                 >
+                  {/* POSIÇÃO FILA */}
                   <Box
                     sx={{
                       fontWeight: 700,
@@ -283,21 +297,39 @@ export const DashboardRecepcao = () => {
                     #{idx + 1}
                   </Box>
 
+                  {/* PACIENTE */}
                   <Box>
                     <Typography
-                      sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}
+                      sx={{
+                        color: TEXT,
+                        fontWeight: 600,
+                        fontSize: 14,
+                      }}
                     >
                       {c.paciente.nome}
                     </Typography>
-                    <Typography sx={{ color: TEXT_DIM, fontSize: 12 }}>
-                      Senha {c.senha}
+
+                    <Typography
+                      sx={{
+                        color: TEXT_DIM,
+                        fontSize: 12,
+                      }}
+                    >
+                      Senha {c.senha} · {c.queixa}
                     </Typography>
                   </Box>
 
+                  {/* PRIORIDADE */}
                   <Box sx={{ display: { xs: "none", md: "block" } }}>
                     <PrioridadeTag p={c.prioridadeChamado} />
                   </Box>
 
+                  {/* STATUS / PRESENÇA */}
+                  {/* <Box sx={{ display: { xs: "none", md: "block" } }}>
+                    <PresencaTag s={c.presenca ?? "PRESENTE"} />
+                  </Box> */}
+
+                  {/* TEMPO */}
                   <Box
                     sx={{
                       display: { xs: "none", md: "flex" },
@@ -306,8 +338,12 @@ export const DashboardRecepcao = () => {
                     }}
                   >
                     <AccessTimeIcon
-                      sx={{ fontSize: 14, color: longa ? "#fb7185" : TEXT_DIM }}
+                      sx={{
+                        fontSize: 14,
+                        color: longa ? "#fb7185" : TEXT_DIM,
+                      }}
                     />
+
                     <Typography
                       sx={{
                         fontSize: 13,
@@ -319,16 +355,18 @@ export const DashboardRecepcao = () => {
                     </Typography>
                   </Box>
 
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    sx={{ justifyContent: "flex-end" }}
-                  >
+                  {/* AÇÕES */}
+                  <Stack direction="row" spacing={0.5}>
                     <Tooltip title="Chamar paciente">
-                      <IconButton size="small" sx={{ color: "#34d399" }}>
+                      <IconButton
+                        size="small"
+                        sx={{ color: "#34d399" }}
+                        // onClick={() => chamarPaciente(c.id)}
+                      >
                         <CampaignIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
+
                     <Tooltip title="Marcar ausência">
                       <IconButton
                         size="small"
@@ -345,6 +383,7 @@ export const DashboardRecepcao = () => {
                         <PersonOffIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
+
                     <Tooltip title="Encaminhar">
                       <IconButton
                         size="small"
@@ -401,7 +440,7 @@ export const DashboardRecepcao = () => {
                     fontFamily: "monospace",
                     fontWeight: 700,
                     color: TEXT,
-                    minWidth: 60,
+                    minWidth: 50,
                   }}
                 >
                   {c.senha}
@@ -412,8 +451,11 @@ export const DashboardRecepcao = () => {
                   >
                     {c.nomePaciente}
                   </Typography>
-                  <PrioridadeTag p={c.prioridadeChamado} />
+                  <Typography sx={{ color: TEXT_DIM, fontSize: 12 }}>
+                    {c.queixa}
+                  </Typography>
                 </Box>
+                <PrioridadeTag p={c.prioridadeChamado} />
               </Box>
 
               <Stack direction="row" spacing={1}>
@@ -421,6 +463,7 @@ export const DashboardRecepcao = () => {
                   size="small"
                   variant="contained"
                   startIcon={<HowToRegIcon />}
+                   onClick={() => navigate(`/recepcao/checkin/${c.id}`)}
                 >
                   Check-in
                 </Button>

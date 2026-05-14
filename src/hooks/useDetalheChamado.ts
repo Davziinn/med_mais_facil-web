@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useState } from "react";
 import { getDetalheChamado } from "../service/api/detalheChamadoService";
 import type { DetalheChamadoUI } from "../mappers/detalheMapper";

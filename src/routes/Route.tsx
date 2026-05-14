@@ -111,7 +111,7 @@ export const router = createBrowserRouter([
       },
 
       {
-        path: "/recepcao/checkin",
+        path: "/recepcao/checkin/:id?",
         element: (
           <ProtectedRoute roles={["recepcao"]}>
             <Checkin />

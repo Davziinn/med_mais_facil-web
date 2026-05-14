@@ -1,10 +1,12 @@
   import { Chip } from "@mui/material";
 
   export type ChamadoStatus =
+    | "AGUARDANDO_CHECKIN"
     | "EM_ESPERA"
     | "EM_ATENDIMENTO"
     | "FINALIZADO"
-    | "CANCELADO";
+    | "CANCELADO"
+    | "AUSENTE";
 
   const config: Record<
     ChamadoStatus,
@@ -13,10 +15,12 @@
       color: "default" | "primary" | "success" | "warning" | "error";
     }
   > = {
+    AGUARDANDO_CHECKIN: {label: "Aguardando Check-In", color: "warning" },
     EM_ESPERA: { label: "Aguardando", color: "primary" },
     EM_ATENDIMENTO: { label: "Em Atendimento", color: "success" },
     FINALIZADO: { label: "Finalizado", color: "default" },
     CANCELADO: { label: "Cancelado", color: "error" },
+    AUSENTE: { label: "Ausente", color: "default" }
   };
 
   type Props = {
