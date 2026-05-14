@@ -10,6 +10,6 @@ export interface FilaEmAtendimentoResponseDTO {
 }
 
 export const getFilaEmAtendimento = async (): Promise<FilaEmAtendimentoResponseDTO[]> => {
-    const response = await api.get<FilaEmAtendimentoResponseDTO[]>('/dashboard')
+    const response = await api.get<FilaEmAtendimentoResponseDTO[]>('/medico')
     return response.data
 }

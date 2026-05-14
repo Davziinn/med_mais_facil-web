@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Grid,
@@ -32,6 +32,8 @@ import {
 import { useFilaEspera } from "../../../hooks/useFilaEspera";
 import { useRecepcaoDashboard } from "../../../hooks/useRecepcaoDashboard";
 import { extrairApenasHoras } from "../../../utils/FormataTempo";
+import { ModalConfirmarAusente } from "../../../components/ModalConfirmarAusente";
+import type { PrioridadeChamadoResponseAPI } from "../../../service/api/filaEsperaService";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -42,7 +44,9 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, color }: StatCardProps) {
   return (
-    <Box sx={{ ...panelSx, p: 2.5, display: "flex", alignItems: "center", gap: 2 }}>
+    <Box
+      sx={{ ...panelSx, p: 2.5, display: "flex", alignItems: "center", gap: 2 }}
+    >
       <Box
         sx={{
           width: 48,
@@ -60,11 +64,19 @@ function StatCard({ icon, label, value, color }: StatCardProps) {
       <Box>
         <Typography
           variant="caption"
-          sx={{ color: TEXT_DIM, textTransform: "uppercase", letterSpacing: "0.04em", fontSize: 11 }}
+          sx={{
+            color: TEXT_DIM,
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+            fontSize: 11,
+          }}
         >
           {label}
         </Typography>
-        <Typography variant="h5" sx={{ color: TEXT, fontWeight: 700, lineHeight: 1.1, mt: 0.5 }}>
+        <Typography
+          variant="h5"
+          sx={{ color: TEXT, fontWeight: 700, lineHeight: 1.1, mt: 0.5 }}
+        >
           {value}
         </Typography>
       </Box>
@@ -80,24 +92,59 @@ function formatTempo(min: number) {
   return `${h}h ${m}min`;
 }
 
+interface ModalAusenteState {
+  open: boolean;
+  paciente: {
+    id: number;
+    nomePaciente: string;
+    senha: string;
+    prioridadeChamado: PrioridadeChamadoResponseAPI;
+  } | null;
+}
+
 export const DashboardRecepcao = () => {
   const navigate = useNavigate();
 
   const { filaEspera, carregarFilaEspera } = useFilaEspera();
-  const { metricas, carregarMetricas } = useRecepcaoDashboard();
+  const {
+    metricas,
+    carregarMetricas,
+    filaCheckIn,
+    carregarFilaAguardandoCheckIn,
+    marcarPacienteComoAusente,
+  } = useRecepcaoDashboard();
+
+  const [modalAusente, setModalAusente] = useState<ModalAusenteState>({
+    open: false,
+    paciente: null,
+  });
+  const [loadingAusente, setLoadingAusente] = useState(false);
+
+  const handleAbrirModalAusente = (paciente: ModalAusenteState["paciente"]) => {
+    setModalAusente({ open: true, paciente });
+  };
+
+  const handleFecharModalAusente = () => {
+    if (loadingAusente) return;
+    setModalAusente({ open: false, paciente: null });
+  };
+
+  const handleConfirmarAusente = async () => {
+    if (!modalAusente.paciente) return;
+    setLoadingAusente(true);
+    await marcarPacienteComoAusente(modalAusente.paciente.id);
+    setLoadingAusente(false);
+    setModalAusente({ open: false, paciente: null });
+  };
 
   useEffect(() => {
     carregarMetricas();
+    carregarFilaAguardandoCheckIn();
   }, []);
 
-  // Fila = pacientes EM_ESPERA ou EM_ATENDIMENTO
   const fila = filaEspera.filter(
-    (c) => c.statusChamado === "EM_ESPERA" || c.statusChamado === "EM_ATENDIMENTO"
-  );
-
-  // Aguardando check-in
-  const aguardandoCheckin = filaEspera.filter(
-    (c) => c.statusChamado === "AGUARDANDO_CHECKIN"
+    (c) =>
+      c.statusChamado === "EM_ESPERA" || c.statusChamado === "EM_ATENDIMENTO",
   );
 
   return (
@@ -166,7 +213,10 @@ export const DashboardRecepcao = () => {
           }}
         >
           <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: TEXT }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 600, color: TEXT }}
+            >
               Fila atual
             </Typography>
             <Typography variant="caption" sx={{ color: TEXT_DIM }}>
@@ -222,12 +272,21 @@ export const DashboardRecepcao = () => {
                     "&:hover": { bgcolor: "rgba(0,0,0,0.01)" },
                   }}
                 >
-                  <Box sx={{ fontWeight: 700, color: TEXT, fontSize: 14, fontFamily: "monospace" }}>
+                  <Box
+                    sx={{
+                      fontWeight: 700,
+                      color: TEXT,
+                      fontSize: 14,
+                      fontFamily: "monospace",
+                    }}
+                  >
                     #{idx + 1}
                   </Box>
 
                   <Box>
-                    <Typography sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}>
+                    <Typography
+                      sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}
+                    >
                       {c.paciente.nome}
                     </Typography>
                     <Typography sx={{ color: TEXT_DIM, fontSize: 12 }}>
@@ -246,7 +305,9 @@ export const DashboardRecepcao = () => {
                       gap: 0.5,
                     }}
                   >
-                    <AccessTimeIcon sx={{ fontSize: 14, color: longa ? "#fb7185" : TEXT_DIM }} />
+                    <AccessTimeIcon
+                      sx={{ fontSize: 14, color: longa ? "#fb7185" : TEXT_DIM }}
+                    />
                     <Typography
                       sx={{
                         fontSize: 13,
@@ -258,14 +319,29 @@ export const DashboardRecepcao = () => {
                     </Typography>
                   </Box>
 
-                  <Stack direction="row" spacing={0.5} sx={{ justifyContent: "flex-end" }}>
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    sx={{ justifyContent: "flex-end" }}
+                  >
                     <Tooltip title="Chamar paciente">
                       <IconButton size="small" sx={{ color: "#34d399" }}>
                         <CampaignIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Marcar ausência">
-                      <IconButton size="small" sx={{ color: "#f87171" }}>
+                      <IconButton
+                        size="small"
+                        sx={{ color: "#f87171" }}
+                        onClick={() =>
+                          handleAbrirModalAusente({
+                            id: c.id,
+                            nomePaciente: c.paciente.nome,
+                            senha: c.senha,
+                            prioridadeChamado: c.prioridadeChamado,
+                          })
+                        }
+                      >
                         <PersonOffIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -273,7 +349,9 @@ export const DashboardRecepcao = () => {
                       <IconButton
                         size="small"
                         sx={{ color: "#60a5fa" }}
-                        onClick={() => navigate(`/recepcao/encaminhamento/${c.id}`)}
+                        onClick={() =>
+                          navigate(`/recepcao/encaminhamento/${c.id}`)
+                        }
                       >
                         <CallSplitIcon fontSize="small" />
                       </IconButton>
@@ -299,14 +377,14 @@ export const DashboardRecepcao = () => {
 
         <Divider sx={{ borderColor: PANEL_BORDER }} />
 
-        {aguardandoCheckin.length === 0 ? (
+        {filaCheckIn.length === 0 ? (
           <Box sx={{ p: 4, textAlign: "center", color: TEXT_DIM }}>
             Todos os pacientes confirmados.
           </Box>
         ) : (
-          aguardandoCheckin.map((c) => (
+          filaCheckIn.map((c) => (
             <Box
-              key={c.id}
+              key={c.senha}
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -318,26 +396,46 @@ export const DashboardRecepcao = () => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Box sx={{ fontFamily: "monospace", fontWeight: 700, color: TEXT, minWidth: 60 }}>
+                <Box
+                  sx={{
+                    fontFamily: "monospace",
+                    fontWeight: 700,
+                    color: TEXT,
+                    minWidth: 60,
+                  }}
+                >
                   {c.senha}
                 </Box>
                 <Box>
-                  <Typography sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}>
-                    {c.paciente.nome}
+                  <Typography
+                    sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}
+                  >
+                    {c.nomePaciente}
                   </Typography>
                   <PrioridadeTag p={c.prioridadeChamado} />
                 </Box>
               </Box>
 
               <Stack direction="row" spacing={1}>
-                {/* onClick vazio até o endpoint de check-in estar pronto */}
-                <Button size="small" variant="contained" startIcon={<HowToRegIcon />}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<HowToRegIcon />}
+                >
                   Check-in
                 </Button>
                 <Button
                   size="small"
                   variant="outlined"
                   sx={{ color: "#f87171", borderColor: "#f8717155" }}
+                  onClick={() =>
+                    handleAbrirModalAusente({
+                      id: c.id,
+                      nomePaciente: c.nomePaciente,
+                      senha: c.senha,
+                      prioridadeChamado: c.prioridadeChamado,
+                    })
+                  }
                 >
                   Ausente
                 </Button>
@@ -346,6 +444,15 @@ export const DashboardRecepcao = () => {
           ))
         )}
       </Box>
+
+      {/* MODAL CONFIRMAR AUSÊNCIA */}
+      <ModalConfirmarAusente
+        open={modalAusente.open}
+        onClose={handleFecharModalAusente}
+        onConfirmar={handleConfirmarAusente}
+        paciente={modalAusente.paciente}
+        loading={loadingAusente}
+      />
     </PageShell>
   );
 };
