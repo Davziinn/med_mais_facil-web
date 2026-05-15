@@ -15,7 +15,7 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import CampaignIcon from "@mui/icons-material/Campaign";
+// import CampaignIcon from "@mui/icons-material/Campaign";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
@@ -32,7 +32,7 @@ import {
 import { useFilaEspera } from "../../../hooks/useFilaEspera";
 import { useRecepcaoDashboard } from "../../../hooks/useRecepcaoDashboard";
 import { extrairApenasHoras } from "../../../utils/FormataTempo";
-import { ModalConfirmarAusente } from "../../../components/ModalConfirmarAusente";
+import { ModalConfirmarAusente } from "../../../components/modais/ModalConfirmarAusente";
 import type { PrioridadeChamadoResponseAPI } from "../../../service/api/filaEsperaService";
 
 interface StatCardProps {
@@ -357,7 +357,7 @@ export const DashboardRecepcao = () => {
 
                   {/* AÇÕES */}
                   <Stack direction="row" spacing={0.5}>
-                    <Tooltip title="Chamar paciente">
+                    {/* <Tooltip title="Chamar paciente">
                       <IconButton
                         size="small"
                         sx={{ color: "#34d399" }}
@@ -365,7 +365,7 @@ export const DashboardRecepcao = () => {
                       >
                         <CampaignIcon fontSize="small" />
                       </IconButton>
-                    </Tooltip>
+                    </Tooltip> */}
 
                     <Tooltip title="Marcar ausência">
                       <IconButton

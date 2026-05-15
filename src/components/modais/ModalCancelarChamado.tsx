@@ -7,33 +7,32 @@ import {
   Box,
   Typography,
 } from "@mui/material";
-import PersonOffIcon from "@mui/icons-material/PersonOff";
-import { PrioridadeTag } from "../pages/recepcao/_shared";
-import type { PrioridadeChamadoResponseAPI } from "../service/api/filaEsperaService";
+import CloseIcon from "@mui/icons-material/Close";
+import type { PrioridadeChamadoResponseAPI } from "../../service/api/filaEsperaService";
+import { PrioridadeTag } from "../../pages/recepcao/_shared";
 
-interface PacienteAusente {
+interface PacienteCancelar {
   id: number;
-  nomePaciente: string;
+  nome: string;
   senha: string;
   prioridadeChamado: PrioridadeChamadoResponseAPI;
 }
 
-
-interface ModalConfirmarAusenteProps {
+interface ModalCancelarChamadoProps {
   open: boolean;
   onClose: () => void;
   onConfirmar: () => Promise<void>;
-  paciente: PacienteAusente | null;
+  paciente: PacienteCancelar | null;
   loading?: boolean;
 }
 
-export function ModalConfirmarAusente({
+export function ModalCancelarChamado({
   open,
   onClose,
   onConfirmar,
   paciente,
   loading = false,
-}: ModalConfirmarAusenteProps) {
+}: ModalCancelarChamadoProps) {
   if (!paciente) return null;
 
   return (
@@ -44,17 +43,18 @@ export function ModalConfirmarAusente({
             width: 40,
             height: 40,
             borderRadius: 2,
-            bgcolor: "#fef2f2",
+            bgcolor: "#f9fafb",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
+            border: "1px solid #e5e7eb",
           }}
         >
-          <PersonOffIcon sx={{ color: "#e24b4a", fontSize: 20 }} />
+          <CloseIcon sx={{ color: "#6b7280", fontSize: 20 }} />
         </Box>
         <Box>
-          <Typography sx={{ fontWeight: 600, fontSize: 15 }}>Confirmar ausência</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: 15 }}>Cancelar chamado</Typography>
           <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
             Esta ação não pode ser desfeita
           </Typography>
@@ -80,7 +80,7 @@ export function ModalConfirmarAusente({
             >
               Paciente
             </Typography>
-            <Typography sx={{ fontWeight: 600, fontSize: 13 }}>{paciente.nomePaciente}</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: 13 }}>{paciente.nome}</Typography>
           </Box>
 
           <Box sx={{ borderTop: "1px solid", borderColor: "divider" }} />
@@ -111,23 +111,26 @@ export function ModalConfirmarAusente({
         </Box>
 
         <Typography variant="body2" sx={{ color: "text.secondary", lineHeight: 1.6 }}>
-          O paciente será marcado como <strong style={{ fontWeight: 600 }}>ausente</strong> e
-          removido da fila de espera. O chamado será encerrado automaticamente.
+          O chamado será <strong style={{ fontWeight: 600 }}>cancelado</strong> e o paciente
+          será removido do sistema. Essa operação encerrará o atendimento sem registro de conclusão.
         </Typography>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2.5, gap: 1 }}>
         <Button variant="outlined" onClick={onClose} disabled={loading}>
-          Cancelar
+          Voltar
         </Button>
         <Button
           variant="contained"
-          color="error"
-          startIcon={<PersonOffIcon />}
+          startIcon={<CloseIcon />}
           onClick={onConfirmar}
           disabled={loading}
+          sx={{
+            bgcolor: "#6b7280",
+            "&:hover": { bgcolor: "#4b5563" },
+          }}
         >
-          {loading ? "Aguarde..." : "Marcar como ausente"}
+          {loading ? "Aguarde..." : "Cancelar chamado"}
         </Button>
       </DialogActions>
     </Dialog>

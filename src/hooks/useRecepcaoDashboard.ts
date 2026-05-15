@@ -3,13 +3,18 @@ import {
   getFilaAguardandoCheckIn,
   getRecepcaoDashboardMetricas,
   patchMarcarPacienteAusente,
+  putCancelarChamado,
+  putConfirmarCheckIn,
   type FilaAguardandoCheckinResponseDTO,
   type RecepcaoDashboardMetricasResponseDTO,
 } from "../service/api/recepcaoDashboard";
 
 export const useRecepcaoDashboard = () => {
-  const [metricas, setMetricas] = useState<RecepcaoDashboardMetricasResponseDTO | null>(null);
-  const [filaCheckIn, setFilaCheckIn] = useState<FilaAguardandoCheckinResponseDTO[] | []>([]);
+  const [metricas, setMetricas] =
+    useState<RecepcaoDashboardMetricasResponseDTO | null>(null);
+  const [filaCheckIn, setFilaCheckIn] = useState<
+    FilaAguardandoCheckinResponseDTO[] | []
+  >([]);
 
   const carregarMetricas = async () => {
     try {
@@ -41,11 +46,36 @@ export const useRecepcaoDashboard = () => {
     }
   };
 
+  const confirmarCheckIn = async (chamadoId: number) => {
+    try {
+      const data = await putConfirmarCheckIn(chamadoId);
+      return data;
+    } catch (error) {
+      console.error("Erro ao confirmar o Check-In do paciente", error);
+    }
+  };
+
+  const cancelarChamado = async (chamadoId: number) => {
+    try {
+      const data = await putCancelarChamado(chamadoId);
+      return data;
+    } catch (error) {
+      console.error("Erro ao cancelar o Check-In do paciente", error);
+    }
+  };
+
+  const removerDaFila = (id: number) => {
+    setFilaCheckIn((prev) => prev.filter((item) => item.id !== id));
+  };
+
   return {
     metricas,
     carregarMetricas,
     filaCheckIn,
     carregarFilaAguardandoCheckIn,
-    marcarPacienteComoAusente
+    marcarPacienteComoAusente,
+    confirmarCheckIn,
+    cancelarChamado,
+    removerDaFila,
   };
 };

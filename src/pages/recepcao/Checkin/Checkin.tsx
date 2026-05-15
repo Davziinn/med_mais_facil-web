@@ -28,7 +28,6 @@ import {
   PageShell,
   PANEL_BORDER,
   panelSx,
-  PresencaTag,
   PrioridadeTag,
   TEXT,
   TEXT_DIM,
@@ -37,6 +36,11 @@ import {
 import { QRScanner } from "../../../components/QRScanner";
 import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 import type { PrioridadeChamadoResponseAPI } from "../../../service/api/filaEsperaService";
+import { useRecepcaoDashboard } from "../../../hooks/useRecepcaoDashboard";
+import { ModalConfirmarCheckIn } from "../../../components/modais/ModalConfirmarCheckIn";
+import { ModalConfirmarAusente } from "../../../components/modais/ModalConfirmarAusente";
+import { ModalCancelarChamado } from "../../../components/modais/ModalCancelarChamado";
+import StatusBadge from "../../../components/StatusBadge";
 
 function calcMinutos(data?: string | Date) {
   if (!data) return 0;
@@ -57,20 +61,78 @@ export const Checkin = () => {
   const { id } = useParams();
   const idNumero = id ? Number(id) : 0;
   const { detalheChamado } = useDetalheChamado(idNumero);
+  const { confirmarCheckIn, marcarPacienteComoAusente, cancelarChamado } = useRecepcaoDashboard();
 
   const [tab, setTab] = useState(0);
   const [codigo, setCodigo] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const confirmar = () => {
+  const [modalCheckIn, setModalCheckIn] = useState(false);
+  const [loadingCheckIn, setLoadingCheckIn] = useState(false);
+
+  const [modalAusente, setModalAusente] = useState(false);
+  const [loadingAusente, setLoadingAusente] = useState(false);
+
+  const [modalCancelar, setModalCancelar] = useState(false);
+  const [loadingCancelar, setLoadingCancelar] = useState(false);
+
+  const pacienteModal = detalheChamado
+    ? {
+        id: detalheChamado.id,
+        nome: detalheChamado.paciente.nome,
+        nomePaciente: detalheChamado.paciente.nome,
+        senha: detalheChamado.senha,
+        prioridadeChamado: detalheChamado.prioridadeChamado as PrioridadeChamadoResponseAPI,
+        statusChamado: detalheChamado.statusChamado
+      }
+    : null;
+
+    console.log("AAAAAAAAAAA: ",pacienteModal)
+
+  const handleConfirmarCheckIn = async () => {
     if (!detalheChamado) return;
-    setToast(`Check-in confirmado: ${detalheChamado.paciente.nome}`);
+    setLoadingCheckIn(true);
+    try {
+      await confirmarCheckIn(detalheChamado.id);
+      setModalCheckIn(false);
+      navigate("/recepcao");
+    } catch (error) {
+      console.error("Erro ao confirmar o Check-In do paciente", error);
+      setToast("Erro ao confirmar check-in");
+    } finally {
+      setLoadingCheckIn(false);
+    }
   };
 
-  const ausente = () => {
+  const handleConfirmarAusente = async () => {
     if (!detalheChamado) return;
-    setToast("Paciente marcado como ausente.");
+    setLoadingAusente(true);
+    try {
+      await marcarPacienteComoAusente(detalheChamado.id);
+      setModalAusente(false);
+      navigate("/recepcao");
+    } catch (error) {
+      console.error("Erro ao marcar paciente como ausente", error);
+      setToast("Erro ao marcar ausência");
+    } finally {
+      setLoadingAusente(false);
+    }
+  };
+
+  const handleConfirmarCancelar = async () => {
+    if (!detalheChamado) return;
+    setLoadingCancelar(true);
+    try {
+      await cancelarChamado(detalheChamado.id);
+      setModalCancelar(false);
+      navigate("/recepcao");
+    } catch (error) {
+      console.error("Erro ao cancelar chamado", error);
+      setToast("Erro ao cancelar chamado");
+    } finally {
+      setLoadingCancelar(false);
+    }
   };
 
   const buscar = (raw: string) => {
@@ -88,7 +150,6 @@ export const Checkin = () => {
       subtitle="Confirme a chegada física por leitura de QR Code ou senha digitada"
     >
       <Grid container spacing={3}>
-        {/* ─── Painel esquerdo: scanner / manual ─── */}
         <Grid size={{ xs: 12, md: 5 }}>
           <Box sx={{ ...panelSx, p: 3 }}>
             <Tabs
@@ -119,7 +180,6 @@ export const Checkin = () => {
                   border: `1.5px solid ${PANEL_BORDER}`,
                   borderRadius: 2,
                   p: 2,
-                  // Fundo levemente visível — sem o escurecimento excessivo
                   bgcolor: "rgba(255,255,255,0.04)",
                   minHeight: 280,
                   display: "flex",
@@ -147,9 +207,7 @@ export const Checkin = () => {
                   onKeyDown={(e) => e.key === "Enter" && buscar(codigo)}
                   fullWidth
                   autoFocus
-                  slotProps={{
-                    inputLabel: { sx: { color: TEXT_DIM } },
-                  }}
+                  slotProps={{ inputLabel: { sx: { color: TEXT_DIM } } }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       color: TEXT,
@@ -179,7 +237,6 @@ export const Checkin = () => {
           </Box>
         </Grid>
 
-        {/* ─── Painel direito: dados do paciente ─── */}
         <Grid size={{ xs: 12, md: 7 }}>
           <Box sx={{ ...panelSx, p: 3, minHeight: 400 }}>
             {!detalheChamado ? (
@@ -206,7 +263,6 @@ export const Checkin = () => {
               </Box>
             ) : (
               <Box>
-                {/* Cabeçalho: senha + tags */}
                 <Box
                   sx={{
                     display: "flex",
@@ -246,13 +302,12 @@ export const Checkin = () => {
                         }
                       />
                     )}
-                    <PresencaTag s="aguardando" />
+                    <StatusBadge status={detalheChamado.statusChamado} />
                   </Stack>
                 </Box>
 
                 <Divider sx={{ borderColor: PANEL_BORDER, my: 2 }} />
 
-                {/* Campos do paciente */}
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Field label="Nome" value={detalheChamado.paciente.nome} />
@@ -284,7 +339,6 @@ export const Checkin = () => {
                     />
                   </Grid>
 
-                  {/* ─── Sintomas ─── */}
                   <Grid size={12}>
                     <Typography
                       variant="caption"
@@ -296,7 +350,6 @@ export const Checkin = () => {
                     >
                       Sintomas relatados
                     </Typography>
-
                     <Box
                       sx={{
                         mt: 0.75,
@@ -346,22 +399,19 @@ export const Checkin = () => {
 
                 <Divider sx={{ borderColor: PANEL_BORDER, my: 3 }} />
 
-                {/* ─── Botões de ação ─── */}
                 <Stack spacing={1.5}>
-                  {/* Linha 1: confirmar — ocupa toda a largura */}
                   <Button
                     fullWidth
                     size="large"
                     variant="contained"
                     color="success"
                     startIcon={<HowToRegIcon />}
-                    onClick={confirmar}
+                    onClick={() => setModalCheckIn(true)}
                     sx={{ fontWeight: 600, py: 1.4 }}
                   >
                     Confirmar check-in
                   </Button>
 
-                  {/* Linha 2: ações secundárias lado a lado */}
                   <Stack direction="row" spacing={1}>
                     <Button
                       fullWidth
@@ -392,7 +442,7 @@ export const Checkin = () => {
                       size="medium"
                       variant="outlined"
                       startIcon={<PersonOffIcon />}
-                      onClick={ausente}
+                      onClick={() => setModalAusente(true)}
                       sx={{
                         color: "#dc2626",
                         borderColor: "#fca5a5",
@@ -411,7 +461,7 @@ export const Checkin = () => {
                       size="medium"
                       variant="outlined"
                       startIcon={<CloseIcon />}
-                      onClick={() => navigate("/recepcao")}
+                      onClick={() => setModalCancelar(true)}
                       sx={{
                         whiteSpace: "nowrap",
                         flexShrink: 0,
@@ -435,16 +485,36 @@ export const Checkin = () => {
         </Grid>
       </Grid>
 
+      <ModalConfirmarCheckIn
+        open={modalCheckIn}
+        onClose={() => !loadingCheckIn && setModalCheckIn(false)}
+        onConfirmar={handleConfirmarCheckIn}
+        paciente={pacienteModal}
+        loading={loadingCheckIn}
+      />
+
+      <ModalConfirmarAusente
+        open={modalAusente}
+        onClose={() => !loadingAusente && setModalAusente(false)}
+        onConfirmar={handleConfirmarAusente}
+        paciente={pacienteModal}
+        loading={loadingAusente}
+      />
+
+      <ModalCancelarChamado
+        open={modalCancelar}
+        onClose={() => !loadingCancelar && setModalCancelar(false)}
+        onConfirmar={handleConfirmarCancelar}
+        paciente={pacienteModal}
+        loading={loadingCancelar}
+      />
+
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}
         onClose={() => setToast(null)}
       >
-        <Alert
-          severity="success"
-          variant="filled"
-          onClose={() => setToast(null)}
-        >
+        <Alert severity="error" variant="filled" onClose={() => setToast(null)}>
           {toast}
         </Alert>
       </Snackbar>

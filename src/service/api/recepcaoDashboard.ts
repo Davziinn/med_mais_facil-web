@@ -30,3 +30,13 @@ export const patchMarcarPacienteAusente = async (chamadoId: number) => {
     const response = await api.patch(`/recepcao/${chamadoId}/ausencia`)
     return response.data
 }
+
+export const putConfirmarCheckIn = async (chamadoId: number) => {
+    const response = await api.put(`/checkin/${chamadoId}/confirmar`)
+    return response.data
+}
+
+export const putCancelarChamado = async (chamadoId: number) => {
+    const response = await api.put(`/checkin/${chamadoId}/cancelar`)
+    return response.data
+}
