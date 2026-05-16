@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Box,
   Stack,
@@ -40,6 +40,8 @@ import type { PrioridadeChamadoResponseAPI } from "../../../service/api/filaEspe
 import { ModalConfirmarAusente } from "../../../components/modais/ModalConfirmarAusente";
 import { ModalCancelarChamado } from "../../../components/modais/ModalCancelarChamado";
 import StatusBadge from "../../../components/StatusBadge";
+import { useAlterarPrioridade } from "../../../hooks/useAlterarPrioridade";
+import { usePaciente } from "../../../hooks/usePaciente";
 
 type Prioridade = PrioridadeChamadoResponseAPI;
 
@@ -84,15 +86,17 @@ export const RecepcaoFila = () => {
   const navigate = useNavigate();
 
   const { filaEspera } = useFilaEspera();
-
   const { marcarPacienteComoAusente, cancelarChamado } = useRecepcaoDashboard();
+  const { alterarPrioridade } = useAlterarPrioridade();
+  const {
+    pacientes,
+    loading: loadingBusca,
+    buscarPacientePorNome,
+  } = usePaciente();
 
   const [filaLocal, setFilaLocal] = useState(filaEspera);
-
   const [busca, setBusca] = useState("");
-
   const [filtro, setFiltro] = useState<"todos" | Prioridade>("todos");
-
   const [toast, setToast] = useState<{
     msg: string;
     severity: "success" | "error";
@@ -103,29 +107,36 @@ export const RecepcaoFila = () => {
     id: number;
   } | null>(null);
 
-  // Modal Ausente
   const [modalAusente, setModalAusente] = useState(false);
-
   const [loadingAusente, setLoadingAusente] = useState(false);
-
   const [pacienteAusente, setPacienteAusente] = useState<PacienteModal | null>(
     null,
   );
 
-  // Modal Cancelar
   const [modalCancelar, setModalCancelar] = useState(false);
-
   const [loadingCancelar, setLoadingCancelar] = useState(false);
-
   const [pacienteCancelar, setPacienteCancelar] =
     useState<PacienteModal | null>(null);
 
-  // Loading prioridade
   const [loadingPrio, setLoadingPrio] = useState(false);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setFilaLocal(filaEspera);
   }, [filaEspera]);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      buscarPacientePorNome(busca);
+    }, 400);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [busca, buscarPacientePorNome]);
 
   const lista = useMemo(() => {
     let r = filaLocal;
@@ -135,17 +146,12 @@ export const RecepcaoFila = () => {
     }
 
     if (busca.trim()) {
-      const q = busca.toLowerCase();
-
-      r = r.filter(
-        (c) =>
-          c.paciente.nome.toLowerCase().includes(q) ||
-          c.senha.toLowerCase().includes(q),
-      );
+      const idsPacientesEncontrados = new Set(pacientes.map((p) => p.id));
+      r = r.filter((c) => idsPacientesEncontrados.has(c.paciente.id));
     }
 
     return r;
-  }, [filaLocal, busca, filtro]);
+  }, [filaLocal, busca, filtro, pacientes]);
 
   const buildPacienteModal = (
     c: (typeof filaLocal)[number],
@@ -235,7 +241,13 @@ export const RecepcaoFila = () => {
     setLoadingPrio(true);
 
     try {
-      // await alterarPrioridade(id, prioridade);
+      await alterarPrioridade(id, { prioridadeChamado: prioridade });
+
+      setFilaLocal((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, prioridadeChamado: prioridade } : item,
+        ),
+      );
 
       setToast({
         msg: `Prioridade alterada para ${PRIORIDADE_COR[prioridade].label}.`,
@@ -272,14 +284,16 @@ export const RecepcaoFila = () => {
       >
         <TextField
           size="small"
-          placeholder="Buscar por nome ou senha..."
+          placeholder="Buscar por nome..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           slotProps={{
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: TEXT_DIM }} />
+                  <SearchIcon
+                    sx={{ color: loadingBusca ? "#60a5fa" : TEXT_DIM }}
+                  />
                 </InputAdornment>
               ),
             },
@@ -289,8 +303,6 @@ export const RecepcaoFila = () => {
             minWidth: 240,
             "& .MuiOutlinedInput-root": {
               color: TEXT,
-              bgcolor: "rgba(0,0,0,0.2)",
-
               "& fieldset": {
                 borderColor: PANEL_BORDER,
               },
@@ -346,17 +358,11 @@ export const RecepcaoFila = () => {
           }}
         >
           <Box>Pos.</Box>
-
           <Box sx={{ display: { xs: "none", md: "block" } }}>Senha</Box>
-
           <Box>Paciente</Box>
-
           <Box sx={{ display: { xs: "none", md: "block" } }}>Prioridade</Box>
-
           <Box sx={{ display: { xs: "none", md: "block" } }}>Status</Box>
-
           <Box sx={{ display: { xs: "none", md: "block" } }}>Espera</Box>
-
           <Box sx={{ textAlign: "right" }}>Ações</Box>
         </Box>
 
@@ -367,9 +373,7 @@ export const RecepcaoFila = () => {
         ) : (
           lista.map((c, idx) => {
             const mins = c.tempoEspera;
-
             const longa = mins > 45;
-
             const cor = PRIORIDADE_COR[c.prioridadeChamado];
 
             return (
@@ -537,7 +541,6 @@ export const RecepcaoFila = () => {
         slotProps={{
           paper: {
             sx: {
-              bgcolor: "#1a2540",
               color: TEXT,
               border: `1px solid ${PANEL_BORDER}`,
             },
@@ -569,7 +572,6 @@ export const RecepcaoFila = () => {
                   bgcolor: PRIORIDADE_COR[p].dot,
                 }}
               />
-
               {PRIORIDADE_COR[p].label}
             </Box>
           </MenuItem>
