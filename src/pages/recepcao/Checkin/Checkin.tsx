@@ -61,7 +61,8 @@ export const Checkin = () => {
   const { id } = useParams();
   const idNumero = id ? Number(id) : 0;
   const { detalheChamado } = useDetalheChamado(idNumero);
-  const { confirmarCheckIn, marcarPacienteComoAusente, cancelarChamado } = useRecepcaoDashboard();
+  const { confirmarCheckIn, marcarPacienteComoAusente, cancelarChamado } =
+    useRecepcaoDashboard();
 
   const [tab, setTab] = useState(0);
   const [codigo, setCodigo] = useState("");
@@ -83,12 +84,13 @@ export const Checkin = () => {
         nome: detalheChamado.paciente.nome,
         nomePaciente: detalheChamado.paciente.nome,
         senha: detalheChamado.senha,
-        prioridadeChamado: detalheChamado.prioridadeChamado as PrioridadeChamadoResponseAPI,
-        statusChamado: detalheChamado.statusChamado
+        prioridadeChamado:
+          detalheChamado.prioridadeChamado as PrioridadeChamadoResponseAPI,
+        statusChamado: detalheChamado.statusChamado,
       }
     : null;
 
-    console.log("AAAAAAAAAAA: ",pacienteModal)
+  console.log("AAAAAAAAAAA: ", pacienteModal);
 
   const handleConfirmarCheckIn = async () => {
     if (!detalheChamado) return;
@@ -367,9 +369,9 @@ export const Checkin = () => {
                             px: 1.5,
                             py: 0.5,
                             borderRadius: "6px",
-                            bgcolor: "#e0e7ff",
-                            border: "1px solid #a5b4fc",
-                            color: "#3730a3",
+                            bgcolor: "rgba(214, 46, 46, 0.1)",
+                            border: "1px solid rgba(177, 13, 13, 0.25)",
+                            color: "#9e1a1a",
                             fontSize: 12,
                             fontWeight: 600,
                             lineHeight: 1.4,
@@ -383,8 +385,8 @@ export const Checkin = () => {
                               px: 0.75,
                               py: 0.1,
                               borderRadius: "4px",
-                              bgcolor: "#c7d2fe",
-                              color: "#312e81",
+                              bgcolor: "rgba(214, 46, 46, 0.1)",
+                              color: "#9e1a1a",
                               fontSize: 11,
                               fontWeight: 700,
                             }}

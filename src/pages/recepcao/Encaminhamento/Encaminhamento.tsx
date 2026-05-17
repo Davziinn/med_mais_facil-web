@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
   Box,
@@ -11,275 +11,72 @@ import {
   Alert,
   TextField,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
-import AccessibleIcon from "@mui/icons-material/Accessible";
-import ChildCareIcon from "@mui/icons-material/ChildCare";
-import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import SearchIcon from "@mui/icons-material/Search";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 
 import { useNavigate, useParams } from "react-router-dom";
-import { PageShell, panelSx, TEXT_DIM, TEXT, PANEL_BORDER, PrioridadeTag, PresencaTag, PRIORIDADE_COR } from "../_shared";
+import {
+  PageShell,
+  panelSx,
+  TEXT_DIM,
+  TEXT,
+  PANEL_BORDER,
+  PrioridadeTag,
+  PresencaTag,
+} from "../_shared";
+import { useFilaEspera } from "../../../hooks/useFilaEspera";
+import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
+import { useEncaminharChamado } from "../../../hooks/useEncaminharChamado";
+import { useEspecialidade } from "../../../hooks/useEspecialidade";
+import type {
+  PrioridadeChamadoResponseAPI,
+  StatusChamadoResponseAPI,
+} from "../../../service/api/filaEsperaService";
+import type { EspecialidadeMedicoResponseDTO } from "../../../service/api/especialidadeService";
 
-
-
-/**
- * MOCK TEMPORÁRIO
- */
-
-type Prioridade = "BAIXA" | "MEDIA" | "ALTA" | "CRITICA";
-
-type Presenca = "aguardando_checkin" | "presente" | "ausente";
-
-type Setor =
-  | "clinico_geral"
-  | "ortopedia"
-  | "pediatria"
-  | "triagem"
-  | "observacao";
-
-type Sintoma = {
-  nome: string;
-};
-
-type RecepcaoChamado = {
-  id: string;
-
-  senha: string;
-
-  prioridade: Prioridade;
-
-  presenca: Presenca;
-
-  criadoEm: string;
-
-  chegouEm?: string;
-
-  setor?: Setor;
-
-  unidadeHospitalar: string;
-
-  queixaPrincipal: string;
-
-  sintomas: Sintoma[];
-
-  paciente: {
-    nome: string;
-    cpf: string;
-    idade: number;
-    sexo: "M" | "F";
-  };
-};
-
-const SETOR_LABEL: Record<Setor, string> = {
-  clinico_geral: "Clínico Geral",
-
-  ortopedia: "Ortopedia",
-
-  pediatria: "Pediatria",
-
-  triagem: "Triagem",
-
-  observacao: "Observação",
-};
-
-const mockItens: RecepcaoChamado[] = [
-  {
-    id: "1",
-
-    senha: "A001",
-
-    prioridade: "CRITICA",
-
-    presenca: "presente",
-
-    criadoEm: "2026-05-12T08:00:00",
-
-    chegouEm: "2026-05-12T08:05:00",
-
-    setor: "triagem",
-
-    unidadeHospitalar: "Hospital Central",
-
-    queixaPrincipal: "Dor intensa no peito",
-
-    sintomas: [{ nome: "Falta de ar" }, { nome: "Tontura" }],
-
-    paciente: {
-      nome: "João Pedro",
-      cpf: "123.456.789-00",
-      idade: 56,
-      sexo: "M",
-    },
-  },
-
-  {
-    id: "2",
-
-    senha: "A002",
-
-    prioridade: "ALTA",
-
-    presenca: "aguardando_checkin",
-
-    criadoEm: "2026-05-12T08:30:00",
-
-    unidadeHospitalar: "Hospital Norte",
-
-    queixaPrincipal: "Febre alta",
-
-    sintomas: [{ nome: "Calafrios" }, { nome: "Dor no corpo" }],
-
-    paciente: {
-      nome: "Maria Clara",
-      cpf: "987.654.321-00",
-      idade: 31,
-      sexo: "F",
-    },
-  },
-
-  {
-    id: "3",
-
-    senha: "A003",
-
-    prioridade: "MEDIA",
-
-    presenca: "presente",
-
-    criadoEm: "2026-05-12T09:00:00",
-
-    chegouEm: "2026-05-12T09:10:00",
-
-    unidadeHospitalar: "UPA Sul",
-
-    queixaPrincipal: "Dor de cabeça",
-
-    sintomas: [{ nome: "Enjoo" }],
-
-    paciente: {
-      nome: "Carlos Henrique",
-      cpf: "741.852.963-00",
-      idade: 42,
-      sexo: "M",
-    },
-  },
-];
-
-function calcMinutos(data: string) {
+function calcMinutos(data: string | Date) {
   const agora = new Date().getTime();
-
   const criado = new Date(data).getTime();
-
   return Math.floor((agora - criado) / 1000 / 60);
 }
 
 function formatTempo(min: number) {
-  if (min < 60) {
-    return `${min} min`;
-  }
-
+  if (min < 60) return `${min} min`;
   const h = Math.floor(min / 60);
-
   const m = min % 60;
-
   return `${h}h ${m}min`;
 }
 
-const SETORES: {
-  v: Setor;
-  icon: React.ReactNode;
-  descr: string;
-}[] = [
-  {
-    v: "clinico_geral",
-
-    icon: <LocalHospitalIcon />,
-
-    descr: "Atendimento médico geral",
-  },
-
-  {
-    v: "ortopedia",
-
-    icon: <AccessibleIcon />,
-
-    descr: "Lesões, fraturas e traumas",
-  },
-
-  {
-    v: "pediatria",
-
-    icon: <ChildCareIcon />,
-
-    descr: "Atendimento infantil",
-  },
-
-  {
-    v: "triagem",
-
-    icon: <MedicalServicesIcon />,
-
-    descr: "Avaliação inicial",
-  },
-
-  {
-    v: "observacao",
-
-    icon: <VisibilityIcon />,
-
-    descr: "Sala de observação",
-  },
-];
-
 export const Encaminhamento = () => {
   const { id } = useParams();
+  const idNumber = Number(id);
 
   const navigate = useNavigate();
 
-  const [itens, setItens] = useState(mockItens);
+  const { filaEspera } = useFilaEspera();
+  const { detalheChamado } = useDetalheChamado(idNumber);
+  const { encaminharChamado } = useEncaminharChamado();
+  const { especialidades } = useEspecialidade();
 
-  const fila = itens.filter((i) => i.presenca === "presente");
-
-  const paciente = itens.find((c) => c.id === id);
-
-  const [setor, setSetor] = useState<Setor | null>(paciente?.setor ?? null);
-
+  const [especialidadeSelecionada, setEspecialidadeSelecionada] =
+    useState<EspecialidadeMedicoResponseDTO | null>(null);
   const [busca, setBusca] = useState("");
+  const [confirmando, setConfirmando] = useState(false);
+  const [toast, setToast] = useState<{
+    msg: string;
+    severity: "success" | "error";
+  } | null>(null);
 
-  const [toast, setToast] = useState<string | null>(null);
-
-  const candidatos = useMemo(() => {
-    if (!busca.trim()) {
-      return fila;
-    }
-
-    const q = busca.toLowerCase();
-
-    return fila.filter(
-      (c) =>
-        c.paciente.nome.toLowerCase().includes(q) ||
-        c.senha.toLowerCase().includes(q),
+  // Sem ID na rota: exibe lista de pacientes da fila
+  if (!id) {
+    const filaFiltrada = filaEspera.filter((fila) =>
+      fila.paciente.nome.toLowerCase().includes(busca.toLowerCase()),
     );
-  }, [fila, busca]);
 
-  const encaminhar = (pacienteId: string, novoSetor: Setor) => {
-    setItens((prev) =>
-      prev.map((item) =>
-        item.id === pacienteId
-          ? {
-              ...item,
-              setor: novoSetor,
-            }
-          : item,
-      ),
-    );
-  };
-
-  if (!paciente) {
     return (
       <PageShell
         title="Encaminhamento"
@@ -287,12 +84,7 @@ export const Encaminhamento = () => {
       >
         <Grid container spacing={3}>
           <Grid size={12}>
-            <Box
-              sx={{
-                ...panelSx,
-                p: 2.5,
-              }}
-            >
+            <Box sx={{ ...panelSx, p: 2.5 }}>
               <TextField
                 fullWidth
                 size="small"
@@ -303,11 +95,7 @@ export const Encaminhamento = () => {
                   input: {
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SearchIcon
-                          sx={{
-                            color: TEXT_DIM,
-                          }}
-                        />
+                        <SearchIcon sx={{ color: TEXT_DIM }} />
                       </InputAdornment>
                     ),
                   },
@@ -315,10 +103,7 @@ export const Encaminhamento = () => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     color: TEXT,
-
-                    "& fieldset": {
-                      borderColor: PANEL_BORDER,
-                    },
+                    "& fieldset": { borderColor: PANEL_BORDER },
                   },
                 }}
               />
@@ -327,70 +112,38 @@ export const Encaminhamento = () => {
 
           <Grid size={12}>
             <Box sx={panelSx}>
-              {candidatos.length === 0 ? (
-                <Box
-                  sx={{
-                    p: 6,
-                    textAlign: "center",
-
-                    color: TEXT_DIM,
-                  }}
-                >
+              {filaFiltrada.length === 0 ? (
+                <Box sx={{ p: 6, textAlign: "center", color: TEXT_DIM }}>
                   Nenhum paciente disponível.
                 </Box>
               ) : (
-                candidatos.map((c) => (
+                filaFiltrada.map((fila) => (
                   <Box
-                    key={c.id}
-                    onClick={() => navigate(`/recepcao/encaminhamento/${c.id}`)}
+                    key={fila.id}
+                    onClick={() =>
+                      navigate(`/recepcao/encaminhamento/${fila.id}`)
+                    }
                     sx={{
                       px: 2.5,
                       py: 2,
-
                       cursor: "pointer",
-
                       borderBottom: `1px solid ${PANEL_BORDER}`,
-
-                      borderLeft: `3px solid ${PRIORIDADE_COR[c.prioridade].dot}`,
-
                       display: "flex",
-
                       justifyContent: "space-between",
-
                       alignItems: "center",
-
-                      "&:hover": {
-                        bgcolor: "rgba(255,255,255,0.03)",
-                      },
-
-                      "&:last-child": {
-                        borderBottom: 0,
-                      },
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.03)" },
+                      "&:last-child": { borderBottom: 0 },
                     }}
                   >
                     <Box>
-                      <Typography
-                        sx={{
-                          color: TEXT,
-
-                          fontWeight: 600,
-                        }}
-                      >
-                        {c.senha} · {c.paciente.nome}
+                      <Typography sx={{ color: TEXT, fontWeight: 600 }}>
+                        {fila.senha} · {fila.paciente.nome}
                       </Typography>
-
-                      <Typography
-                        sx={{
-                          color: TEXT_DIM,
-
-                          fontSize: 12,
-                        }}
-                      >
-                        {c.queixaPrincipal}
+                      <Typography sx={{ color: TEXT_DIM, fontSize: 12 }}>
+                        {fila.queixa}
                       </Typography>
                     </Box>
-
-                    <PrioridadeTag p={c.prioridade} />
+                    <PrioridadeTag p={fila.prioridadeChamado} />
                   </Box>
                 ))
               )}
@@ -401,18 +154,52 @@ export const Encaminhamento = () => {
     );
   }
 
-  const confirmar = () => {
-    if (!setor) {
-      return;
+  // Com ID mas detalhe ainda carregando
+  if (!detalheChamado) {
+    return (
+      <PageShell
+        title="Encaminhamento de paciente"
+        subtitle="Direcione o paciente para o setor adequado"
+        actions={
+          <Button
+            variant="text"
+            sx={{ color: TEXT_DIM }}
+            onClick={() => navigate("/recepcao/fila")}
+          >
+            ← Voltar para a fila
+          </Button>
+        }
+      >
+        <Box sx={{ p: 6, textAlign: "center", color: TEXT_DIM }}>
+          Carregando dados do paciente...
+        </Box>
+      </PageShell>
+    );
+  }
+
+  const confirmar = async () => {
+    if (!especialidadeSelecionada) return;
+
+    setConfirmando(true);
+    try {
+      await encaminharChamado(detalheChamado.id, {
+        especialidadeId: especialidadeSelecionada.id,
+      });
+
+      setToast({
+        msg: `Paciente encaminhado para ${especialidadeSelecionada.nome}.`,
+        severity: "success",
+      });
+
+      setTimeout(() => navigate("/recepcao/fila"), 800);
+    } catch {
+      setToast({
+        msg: "Erro ao encaminhar paciente. Tente novamente.",
+        severity: "error",
+      });
+    } finally {
+      setConfirmando(false);
     }
-
-    encaminhar(paciente.id, setor);
-
-    setToast(`Paciente encaminhado para ${SETOR_LABEL[setor]}.`);
-
-    setTimeout(() => {
-      navigate("/recepcao/fila");
-    }, 800);
   };
 
   return (
@@ -422,9 +209,7 @@ export const Encaminhamento = () => {
       actions={
         <Button
           variant="text"
-          sx={{
-            color: TEXT_DIM,
-          }}
+          sx={{ color: TEXT_DIM }}
           onClick={() => navigate("/recepcao/fila")}
         >
           ← Voltar para a fila
@@ -432,25 +217,14 @@ export const Encaminhamento = () => {
       }
     >
       <Grid container spacing={3}>
-        <Grid
-          size={{
-            xs: 12,
-            md: 5,
-          }}
-        >
-          <Box
-            sx={{
-              ...panelSx,
-              p: 3,
-            }}
-          >
+        {/* Painel do paciente */}
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Box sx={{ ...panelSx, p: 3 }}>
             <Typography
               variant="caption"
               sx={{
                 color: TEXT_DIM,
-
                 textTransform: "uppercase",
-
                 letterSpacing: "0.05em",
               }}
             >
@@ -459,46 +233,28 @@ export const Encaminhamento = () => {
 
             <Typography
               variant="h6"
-              sx={{
-                color: TEXT,
-                fontWeight: 700,
-                mt: 0.5,
-              }}
+              sx={{ color: TEXT, fontWeight: 700, mt: 0.5 }}
             >
-              {paciente.paciente.nome}
+              {detalheChamado.paciente.nome}
             </Typography>
 
-            <Typography
-              sx={{
-                color: TEXT_DIM,
-                fontSize: 13,
-                mb: 2,
-              }}
-            >
-              {paciente.paciente.idade} anos ·{" "}
-              {paciente.paciente.sexo === "M" ? "Masculino" : "Feminino"} · CPF{" "}
-              {paciente.paciente.cpf}
+            <Typography sx={{ color: TEXT_DIM, fontSize: 13, mb: 2 }}>
+              {detalheChamado.paciente.idade} anos ·{" "}
+              {detalheChamado.paciente.sexo} · CPF {detalheChamado.paciente.cpf}
             </Typography>
 
-            <Stack
-              direction="row"
-              spacing={1}
-              sx={{
-                mb: 2,
-              }}
-            >
-              <PrioridadeTag p={paciente.prioridade} />
-
-              <PresencaTag s={paciente.presenca} />
+            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+              <PrioridadeTag
+                p={
+                  detalheChamado.prioridadeChamado as PrioridadeChamadoResponseAPI
+                }
+              />
+              <PresencaTag
+                s={detalheChamado.statusChamado as StatusChamadoResponseAPI}
+              />
             </Stack>
 
-            <Divider
-              sx={{
-                borderColor: PANEL_BORDER,
-
-                my: 2,
-              }}
-            />
+            <Divider sx={{ borderColor: PANEL_BORDER, my: 2 }} />
 
             <Stack spacing={2}>
               <Box>
@@ -506,23 +262,14 @@ export const Encaminhamento = () => {
                   variant="caption"
                   sx={{
                     color: TEXT_DIM,
-
                     textTransform: "uppercase",
-
                     letterSpacing: "0.05em",
                   }}
                 >
                   Queixa principal
                 </Typography>
-
-                <Typography
-                  sx={{
-                    color: TEXT,
-                    fontSize: 14,
-                    mt: 0.5,
-                  }}
-                >
-                  {paciente.queixaPrincipal}
+                <Typography sx={{ color: TEXT, fontSize: 14, mt: 0.5 }}>
+                  {detalheChamado.queixa}
                 </Typography>
               </Box>
 
@@ -531,45 +278,33 @@ export const Encaminhamento = () => {
                   variant="caption"
                   sx={{
                     color: TEXT_DIM,
-
                     textTransform: "uppercase",
-
                     letterSpacing: "0.05em",
                   }}
                 >
                   Sintomas
                 </Typography>
-
                 <Stack
                   direction="row"
                   spacing={1}
                   useFlexGap
-                  sx={{
-                    mt: 1,
-                    flexWrap: "wrap",
-                  }}
+                  sx={{ mt: 1, flexWrap: "wrap" }}
                 >
-                  {paciente.sintomas.map((s, i) => (
+                  {detalheChamado.sintomas.map((sintoma, i) => (
                     <Box
                       key={i}
                       sx={{
                         px: 1.25,
                         py: 0.5,
-
                         borderRadius: 1,
-
-                        bgcolor: "rgba(96,165,250,0.1)",
-
-                        border: "1px solid rgba(96,165,250,0.25)",
-
-                        color: "#bfdbfe",
-
+                        bgcolor: "rgba(214, 46, 46, 0.1)",
+                        border: "1px solid rgba(177, 13, 13, 0.25)",
+                        color: "#9e1a1a",
                         fontSize: 12,
-
                         fontWeight: 500,
                       }}
                     >
-                      {s.nome}
+                      {sintoma.descricao}
                     </Box>
                   ))}
                 </Stack>
@@ -580,190 +315,125 @@ export const Encaminhamento = () => {
                   variant="caption"
                   sx={{
                     color: TEXT_DIM,
-
                     textTransform: "uppercase",
-
                     letterSpacing: "0.05em",
                   }}
                 >
                   Tempo de espera
                 </Typography>
-
                 <Typography
-                  sx={{
-                    color: TEXT,
-                    fontWeight: 600,
-                    fontSize: 18,
-                    mt: 0.5,
-                  }}
+                  sx={{ color: TEXT, fontWeight: 600, fontSize: 18, mt: 0.5 }}
                 >
-                  {formatTempo(
-                    calcMinutos(paciente.chegouEm ?? paciente.criadoEm),
-                  )}
+                  {formatTempo(calcMinutos(detalheChamado.dataAbertura))}
                 </Typography>
               </Box>
             </Stack>
           </Box>
         </Grid>
 
-        <Grid
-          size={{
-            xs: 12,
-            md: 7,
-          }}
-        >
-          <Box
-            sx={{
-              ...panelSx,
-              p: 3,
-            }}
-          >
+        {/* Painel de especialidades */}
+        <Grid size={{ xs: 12, md: 7 }}>
+          <Box sx={{ ...panelSx, p: 3 }}>
             <Typography
               variant="subtitle1"
-              sx={{
-                color: TEXT,
-                fontWeight: 600,
-                mb: 0.5,
-              }}
+              sx={{ color: TEXT, fontWeight: 600, mb: 0.5 }}
             >
-              Selecionar setor de destino
+              Selecionar especialidade de destino
             </Typography>
 
-            <Typography
-              sx={{
-                color: TEXT_DIM,
-                fontSize: 13,
-                mb: 3,
-              }}
-            >
-              Escolha um setor para encaminhar o paciente
+            <Typography sx={{ color: TEXT_DIM, fontSize: 13, mb: 3 }}>
+              Escolha a especialidade para encaminhar o paciente
             </Typography>
 
-            <Grid container spacing={2}>
-              {SETORES.map((s) => {
-                const ativo = setor === s.v;
+            {especialidades.length === 0 ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+                <CircularProgress size={32} sx={{ color: "#60a5fa" }} />
+              </Box>
+            ) : (
+              <Grid container spacing={2}>
+                {especialidades.map((esp) => {
+                  const ativo = especialidadeSelecionada?.id === esp.id;
 
-                return (
-                  <Grid
-                    key={s.v}
-                    size={{
-                      xs: 12,
-                      sm: 6,
-                    }}
-                  >
-                    <Box
-                      onClick={() => setSetor(s.v)}
-                      sx={{
-                        p: 2.25,
-
-                        borderRadius: 2,
-
-                        cursor: "pointer",
-
-                        bgcolor: ativo
-                          ? "rgba(96,165,250,0.12)"
-                          : "rgba(255,255,255,0.02)",
-
-                        border: `1px solid ${ativo ? "#60a5fa" : PANEL_BORDER}`,
-
-                        display: "flex",
-
-                        alignItems: "center",
-
-                        gap: 2,
-
-                        transition: "all 0.15s",
-
-                        "&:hover": {
-                          borderColor: "#60a5fa66",
-
-                          bgcolor: "rgba(96,165,250,0.06)",
-                        },
-                      }}
-                    >
+                  return (
+                    <Grid key={esp.id} size={{ xs: 12, sm: 6 }}>
                       <Box
+                        onClick={() => setEspecialidadeSelecionada(esp)}
                         sx={{
-                          width: 44,
-                          height: 44,
-
-                          borderRadius: 1.5,
-
-                          bgcolor: ativo ? "#60a5fa" : "rgba(96,165,250,0.15)",
-
-                          color: ativo ? "#0b1220" : "#60a5fa",
-
+                          p: 2.25,
+                          borderRadius: 2,
+                          cursor: "pointer",
+                          bgcolor: ativo
+                            ? "rgba(96,165,250,0.12)"
+                            : "rgba(255,255,255,0.02)",
+                          border: `1px solid ${ativo ? "#60a5fa" : PANEL_BORDER}`,
                           display: "flex",
-
                           alignItems: "center",
-
-                          justifyContent: "center",
+                          gap: 2,
+                          transition: "all 0.15s",
+                          "&:hover": {
+                            borderColor: "#60a5fa66",
+                            bgcolor: "rgba(96,165,250,0.06)",
+                          },
                         }}
                       >
-                        {s.icon}
-                      </Box>
-
-                      <Box>
-                        <Typography
+                        <Box
                           sx={{
-                            color: TEXT,
-
-                            fontWeight: 600,
-
-                            fontSize: 14,
+                            width: 44,
+                            height: 44,
+                            borderRadius: 1.5,
+                            bgcolor: ativo
+                              ? "#60a5fa"
+                              : "rgba(96,165,250,0.15)",
+                            color: ativo ? "#0b1220" : "#60a5fa",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
                           }}
                         >
-                          {SETOR_LABEL[s.v]}
-                        </Typography>
-
+                          <LocalHospitalIcon />
+                        </Box>
                         <Typography
-                          sx={{
-                            color: TEXT_DIM,
-
-                            fontSize: 12,
-                          }}
+                          sx={{ color: TEXT, fontWeight: 600, fontSize: 14 }}
                         >
-                          {s.descr}
+                          {esp.nome}
                         </Typography>
                       </Box>
-                    </Box>
-                  </Grid>
-                );
-              })}
-            </Grid>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            )}
 
-            <Divider
-              sx={{
-                borderColor: PANEL_BORDER,
-
-                my: 3,
-              }}
-            />
+            <Divider sx={{ borderColor: PANEL_BORDER, my: 3 }} />
 
             <Stack
               direction="row"
               spacing={1.5}
-              sx={{
-                justifyContent: "flex-end",
-              }}
+              sx={{ justifyContent: "flex-end" }}
             >
               <Button
                 variant="text"
-                sx={{
-                  color: TEXT_DIM,
-                }}
+                sx={{ color: TEXT_DIM }}
                 onClick={() => navigate(-1)}
+                disabled={confirmando}
               >
                 Cancelar
               </Button>
-
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<CallSplitIcon />}
-                disabled={!setor}
+                startIcon={
+                  confirmando ? (
+                    <CircularProgress size={16} sx={{ color: "inherit" }} />
+                  ) : (
+                    <CallSplitIcon />
+                  )
+                }
+                disabled={!especialidadeSelecionada || confirmando}
                 onClick={confirmar}
               >
-                Confirmar encaminhamento
+                {confirmando ? "Encaminhando..." : "Confirmar encaminhamento"}
               </Button>
             </Stack>
           </Box>
@@ -776,13 +446,13 @@ export const Encaminhamento = () => {
         onClose={() => setToast(null)}
       >
         <Alert
-          severity="success"
+          severity={toast?.severity ?? "success"}
           variant="filled"
           onClose={() => setToast(null)}
         >
-          {toast}
+          {toast?.msg}
         </Alert>
       </Snackbar>
     </PageShell>
   );
-}
+};
