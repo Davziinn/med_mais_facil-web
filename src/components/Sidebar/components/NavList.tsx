@@ -14,6 +14,12 @@ import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import SearchIcon from "@mui/icons-material/Search";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
+import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import HealingIcon from "@mui/icons-material/Healing";
+import EventNoteIcon from "@mui/icons-material/EventNote";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth, type Role } from "../../../contexts/AuthContext";
@@ -84,15 +90,29 @@ const navByRole: Record<Role, NavItem[]> = {
       to: "/adm",
       icon: <AdminPanelSettingsIcon />,
       label: "Painel ADM",
+      exact: true, // FIX: sem isso, /adm ficava ativo em TODAS as rotas /adm/*
+    },
+    { to: "/adm/usuarios", icon: <PeopleIcon />, label: "Usuários" },
+    { to: "/adm/hospitais", icon: <LocalHospitalIcon />, label: "Hospitais" },
+    {
+      to: "/adm/especialidades",
+      icon: <MedicalServicesIcon />,
+      label: "Especialidades",
+    },
+    { to: "/adm/sintomas", icon: <HealingIcon />, label: "Sintomas" },
+    { to: "/adm/eventos", icon: <EventNoteIcon />, label: "Eventos Clínicos" },
+    { to: "/adm/logs", icon: <ReceiptLongIcon />, label: "Logs / Auditoria" },
+    {
+      to: "/adm/configuracoes",
+      icon: <SettingsIcon />,
+      label: "Configurações",
     },
   ],
 };
 
 export const NavList = () => {
   const location = useLocation();
-
   const { user } = useAuth();
-
   const navItems = user ? navByRole[user.role] : [];
 
   return (
@@ -112,23 +132,15 @@ export const NavList = () => {
                 px: 2,
                 py: 1.2,
                 position: "relative",
-
                 bgcolor: isActive ? "primary.main" : "transparent",
-
                 color: isActive ? "#fff" : "rgba(238,242,247,0.7)",
-
                 transform: isActive ? "scale(1.02)" : "scale(1)",
-
                 boxShadow: isActive ? 3 : "none",
-
                 transition: "all 0.2s ease",
-
                 "&:hover": {
                   bgcolor: isActive ? "primary.main" : "rgba(255,255,255,0.06)",
-
                   color: "#fff",
                 },
-
                 "&::before": isActive
                   ? {
                       content: '""',
@@ -143,15 +155,9 @@ export const NavList = () => {
                   : {},
               }}
             >
-              <ListItemIcon
-                sx={{
-                  color: "inherit",
-                  minWidth: 40,
-                }}
-              >
+              <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>
                 {item.icon}
               </ListItemIcon>
-
               <ListItemText
                 primary={item.label}
                 slotProps={{

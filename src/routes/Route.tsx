@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
 
-
 import Busca from "../pages/medico/Busca/Busca";
 import { DetalheChamado } from "../pages/medico/DetalheChamado/DetalheChamado";
 import { HistoricoAtendimento } from "../pages/medico/HistoricoChamados/HistoricoAtendimento";
@@ -16,19 +15,14 @@ import { Checkin } from "../pages/recepcao/Checkin/Checkin";
 import { RecepcaoFila } from "../pages/recepcao/RecepcaoFila/RecepcaoFila";
 import { BuscaPaciente } from "../pages/recepcao/BuscaPaciente";
 import { Encaminhamento } from "../pages/recepcao/Encaminhamento/Encaminhamento";
-
-/* Médico */
-
-
-/* Recepção */
-// import RecepcaoDashboard from "@/pages/recepcao/Dashboard";
-// import RecepcaoCheckin from "@/pages/recepcao/Checkin";
-// import RecepcaoFila from "@/pages/recepcao/FilaOperacional";
-// import RecepcaoBusca from "@/pages/recepcao/BuscaPaciente";
-// import RecepcaoEncaminhamento from "@/pages/recepcao/Encaminhamento";
-
-/* ADM */
-// import Adm from "@/pages/adm/Adm";
+import AdmDashboard from "../pages/administrador/Dashboard/AdmDashboard";
+import { Usuarios } from "../pages/administrador/Usuarios/Usuarios";
+import { Hospitais } from "../pages/administrador/Hospitais/Hospitais";
+import { Especialidades } from "../pages/administrador/Especialidades/Especialidades";
+import { Sintomas } from "../pages/administrador/Sintomas/Sintomas";
+import { Eventos } from "../pages/administrador/EventoClinico/Eventos";
+import Logs from "../pages/administrador/LogsAuditoria/Logs";
+import { Configuracoes } from "../pages/administrador/Configuracoes/Configuracoes";
 
 export const router = createBrowserRouter([
   {
@@ -159,14 +153,70 @@ export const router = createBrowserRouter([
           ADM
       ========================= */
 
-      // {
-      //   path: "/adm",
-      //   element: (
-      //     <ProtectedRoute roles={["adm"]}>
-      //       <Adm />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "/adm",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <AdmDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/usuarios",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <Usuarios />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/hospitais",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <Hospitais />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/especialidades",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <Especialidades />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/sintomas",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <Sintomas />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/eventos",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <Eventos />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/logs",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <Logs />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/configuracoes",
+        element: (
+          <ProtectedRoute roles={["adm"]}>
+            <Configuracoes />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 
