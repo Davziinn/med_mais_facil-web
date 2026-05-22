@@ -11,7 +11,7 @@ import {
   DialogTitle,
   IconButton,
   InputAdornment,
-  Stack,
+  // Stack,
   Table,
   TableBody,
   TableCell,
@@ -30,66 +30,99 @@ import CloseIcon from "@mui/icons-material/Close";
 import { AdminPageHeader } from "../../../components/AdminPageHeader";
 import { ConfirmActionModal } from "../../../components/modais/ModalConfirmAction";
 import { useToast } from "../../../contexts/ToastContext";
-import {
-  type Especialidade,
-  ESPECIALIDADES_MOCK,
-} from "../../../mocks/adminMock";
+import { useEspecialidade } from "../../../hooks/useEspecialidade";
+import type { EspecialidadeMedicoRequestDTO, EspecialidadeMedicoResponseDTO } from "../../../service/api/especialidadeService";
 
-const empty = (): Especialidade => ({
-  id: "",
+const COLOR_PALETTE = [
+  { bg: "#0284c7", label: "Azul"   },
+  { bg: "#ca8a04", label: "Amarelo" },
+  { bg: "#16a34a", label: "Verde"   },
+  { bg: "#7c3aed", label: "Roxo"    },
+] as const;
+
+const corPorId = (id: number) => COLOR_PALETTE[id % COLOR_PALETTE.length].bg;
+
+type FormState = EspecialidadeMedicoRequestDTO;
+
+const emptyForm = (): FormState => ({
   nome: "",
   descricao: "",
-  cor: "#0284c7",
-  medicosVinculados: 0,
 });
 
 export const Especialidades = () => {
   const { showToast } = useToast();
-  const [items, setItems] = useState<Especialidade[]>(ESPECIALIDADES_MOCK);
+  const {
+    especialidades,
+    criarEspecialidade,
+    editarEspecialidade,
+    removerEspecialidade,
+  } = useEspecialidade();
+
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Especialidade>(empty());
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm());
+
   const [confirm, setConfirm] = useState<null | {
     tipo: "salvar" | "excluir";
-    item: Especialidade;
+    item: EspecialidadeMedicoResponseDTO;
   }>(null);
 
   const filtered = useMemo(
     () =>
-      items.filter((e) => e.nome.toLowerCase().includes(search.toLowerCase())),
-    [items, search],
+      especialidades.filter((e) =>
+        e.nome.toLowerCase().includes(search.toLowerCase()),
+      ),
+    [especialidades, search],
   );
 
   const openCreate = () => {
-    setEditing(empty());
+    setEditingId(null);
+    setForm(emptyForm());
     setFormOpen(true);
   };
-  const openEdit = (e: Especialidade) => {
-    setEditing(e);
+
+  const openEdit = (e: EspecialidadeMedicoResponseDTO) => {
+    setEditingId(e.id);
+    setForm({ nome: e.nome, descricao: e.descricao });
     setFormOpen(true);
   };
-  const requestSave = () => setConfirm({ tipo: "salvar", item: editing });
-  const requestDelete = (e: Especialidade) =>
+
+  const requestSave = () => {
+    const fakeItem: EspecialidadeMedicoResponseDTO = {
+      id: editingId ?? 0,
+      nome: form.nome,
+      descricao: form.descricao,
+    };
+    setConfirm({ tipo: "salvar", item: fakeItem });
+  };
+
+  const requestDelete = (e: EspecialidadeMedicoResponseDTO) =>
     setConfirm({ tipo: "excluir", item: e });
 
-  const doConfirm = () => {
+  const doConfirm = async () => {
     if (!confirm) return;
-    if (confirm.tipo === "salvar") {
-      if (editing.id) {
-        setItems((prev) =>
-          prev.map((e) => (e.id === editing.id ? editing : e)),
-        );
-        showToast("Especialidade atualizada");
+
+    try {
+      if (confirm.tipo === "salvar") {
+        if (editingId !== null) {
+          await editarEspecialidade(editingId, form);
+          showToast("Especialidade atualizada");
+        } else {
+          await criarEspecialidade(form);
+          showToast("Especialidade criada");
+        }
+        setFormOpen(false);
       } else {
-        setItems((prev) => [{ ...editing, id: `esp-${Date.now()}` }, ...prev]);
-        showToast("Especialidade criada");
+        await removerEspecialidade(confirm.item.id);
+        showToast("Especialidade removida", "info");
       }
-      setFormOpen(false);
-    } else {
-      setItems((prev) => prev.filter((e) => e.id !== confirm.item.id));
-      showToast("Especialidade removida", "info");
+    } catch {
+      showToast("Ocorreu um erro. Tente novamente.", "error");
+    } finally {
+      setConfirm(null);
     }
-    setConfirm(null);
   };
 
   return (
@@ -110,7 +143,6 @@ export const Especialidades = () => {
 
       <Card sx={{ mb: 2 }}>
         <CardContent>
-          {/* FIX: InputProps → slotProps.input */}
           <TextField
             fullWidth
             size="small"
@@ -137,7 +169,7 @@ export const Especialidades = () => {
               <TableRow>
                 <TableCell>Especialidade</TableCell>
                 <TableCell>Descrição</TableCell>
-                <TableCell align="center">Médicos vinculados</TableCell>
+                {/* <TableCell align="center">Médicos vinculados</TableCell> */}
                 <TableCell align="right">Ações</TableCell>
               </TableRow>
             </TableHead>
@@ -149,20 +181,21 @@ export const Especialidades = () => {
                       label={e.nome}
                       size="small"
                       sx={{
-                        bgcolor: `${e.cor}22`,
-                        color: e.cor,
                         fontWeight: 700,
+                        bgcolor: `${corPorId(e.id)}22`,
+                        color: corPorId(e.id),
+                        border: `1px solid ${corPorId(e.id)}55`,
                       }}
                     />
                   </TableCell>
                   <TableCell>{e.descricao}</TableCell>
-                  <TableCell align="center">
+                  {/* <TableCell align="center">
                     <Chip
                       label={e.medicosVinculados}
                       size="small"
                       variant="outlined"
                     />
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell align="right">
                     <Tooltip title="Editar">
                       <IconButton onClick={() => openEdit(e)}>
@@ -182,7 +215,7 @@ export const Especialidades = () => {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
                     <Typography color="text.secondary">
                       Nenhuma especialidade encontrada
                     </Typography>
@@ -194,7 +227,6 @@ export const Especialidades = () => {
         </TableContainer>
       </Card>
 
-      {/* FIX: PaperProps → slotProps.paper */}
       <Dialog
         open={formOpen}
         onClose={() => setFormOpen(false)}
@@ -212,48 +244,44 @@ export const Especialidades = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {editing.id ? "Editar especialidade" : "Nova especialidade"}
+            {editingId !== null ? "Editar especialidade" : "Nova especialidade"}
           </Typography>
           <IconButton onClick={() => setFormOpen(false)}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
+
         <DialogContent sx={{ pt: 3, display: "grid", gap: 2 }}>
           <TextField
             label="Nome"
             fullWidth
-            value={editing.nome}
-            onChange={(e) => setEditing({ ...editing, nome: e.target.value })}
+            value={form.nome}
+            onChange={(e) => setForm({ ...form, nome: e.target.value })}
           />
           <TextField
             label="Descrição"
             fullWidth
             multiline
             rows={2}
-            value={editing.descricao}
-            onChange={(e) =>
-              setEditing({ ...editing, descricao: e.target.value })
-            }
+            value={form.descricao}
+            onChange={(e) => setForm({ ...form, descricao: e.target.value })}
           />
-          {/* FIX: alignItems → sx */}
+          {/* Campo "Cor" removido — não faz parte do modelo da API */}
+
+          {/* Médicos vinculados — comentado até o endpoint estar disponível
           <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
             <TextField
-              label="Cor (hex)"
-              value={editing.cor}
-              onChange={(e) => setEditing({ ...editing, cor: e.target.value })}
-            />
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1,
-                bgcolor: editing.cor,
-                border: "1px solid",
-                borderColor: "divider",
-              }}
+              label="Médicos vinculados"
+              type="number"
+              value={form.medicosVinculados}
+              onChange={(e) =>
+                setForm({ ...form, medicosVinculados: Number(e.target.value) })
+              }
             />
           </Stack>
+          */}
         </DialogContent>
+
         <DialogActions
           sx={{ p: 2, borderTop: "1px solid", borderColor: "divider" }}
         >
@@ -264,7 +292,11 @@ export const Especialidades = () => {
           >
             Cancelar
           </Button>
-          <Button onClick={requestSave} variant="contained">
+          <Button
+            onClick={requestSave}
+            variant="contained"
+            disabled={!form.nome.trim()}
+          >
             Salvar
           </Button>
         </DialogActions>
@@ -290,4 +322,4 @@ export const Especialidades = () => {
       />
     </Box>
   );
-}
+};
