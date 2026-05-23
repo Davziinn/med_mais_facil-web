@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -26,9 +27,7 @@ import {
   TextField,
   Tooltip,
   Typography,
-  OutlinedInput,
-  Checkbox,
-  ListItemText,
+  Alert,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
@@ -36,93 +35,176 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import CloseIcon from "@mui/icons-material/Close";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { AdminPageHeader } from "../../../components/AdminPageHeader";
 import { ConfirmActionModal } from "../../../components/modais/ModalConfirmAction";
 import { StatCardAdmin } from "../../../components/StatCardAdmin";
 import { useToast } from "../../../contexts/ToastContext";
 import {
-  type StatusHospital,
-  type Hospital,
-  HOSPITAIS_MOCK,
-  ESPECIALIDADES_MOCK,
-} from "../../../mocks/adminMock";
+  type HospitalResponseDTO,
+  type HospitalRequestDTO,
+  type StatusHospitalResponseAPI,
+} from "../../../service/api/hospitalService";
+import { useHospitais } from "../../../hooks/useHospital";
+
+const maskCnpj = (value: string): string => {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  return digits
+    .replace(/^(\d{2})(\d)/, "$1.$2")
+    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+    .replace(/(\d{4})(\d)/, "$1-$2");
+};
+
+const STATUS_LABEL: Record<StatusHospitalResponseAPI, string> = {
+  ATIVO: "Ativo",
+  INATIVO: "Inativo",
+  LOTADO: "Lotado",
+  EM_MANUTENCAO: "Em manutenção",
+};
 
 const STATUS_COR: Record<
-  StatusHospital,
+  StatusHospitalResponseAPI,
   "success" | "default" | "warning" | "info"
 > = {
-  Ativo: "success",
-  Inativo: "default",
-  Lotado: "warning",
-  "Em manutenção": "info",
+  ATIVO: "success",
+  INATIVO: "default",
+  LOTADO: "warning",
+  EM_MANUTENCAO: "info",
 };
-const empty = (): Hospital => ({
-  id: "",
+
+const STATUS_OPTIONS: StatusHospitalResponseAPI[] = [
+  "ATIVO",
+  "INATIVO",
+  "LOTADO",
+  "EM_MANUTENCAO",
+];
+
+interface FormState {
+  id: number | null;
+  nome: string;
+  cnpj: string;
+  // telefone: string;
+  endereco: string;
+  cidade: string;
+  estado: string;
+  statusHospital: StatusHospitalResponseAPI;
+}
+
+const emptyForm = (): FormState => ({
+  id: null,
   nome: "",
   cnpj: "",
-  telefone: "",
+  // telefone: "",
   endereco: "",
   cidade: "",
   estado: "",
-  status: "Ativo",
-  especialidadesIds: [],
+  statusHospital: "ATIVO",
+});
+
+const hospitalToForm = (h: HospitalResponseDTO): FormState => ({
+  id: h.id,
+  nome: h.nome,
+  cnpj: maskCnpj(h.cnpj),
+  // telefone: "",
+  endereco: h.endereco,
+  cidade: h.cidade,
+  estado: h.estado,
+  statusHospital: h.statusHospital,
+});
+
+const formToRequest = (f: FormState): HospitalRequestDTO => ({
+  id: f.id ?? 0,
+  nome: f.nome,
+  cnpj: f.cnpj.replace(/\D/g, ""),
+  endereco: f.endereco,
+  cidade: f.cidade,
+  estado: f.estado,
+  statusHospital: f.statusHospital,
 });
 
 export const Hospitais = () => {
   const { showToast } = useToast();
-  const [items, setItems] = useState<Hospital[]>(HOSPITAIS_MOCK);
+
+  const {
+    hospitais,
+    metricas,
+    loading,
+    loadingMetricas,
+    error,
+    carregarHospitais,
+    carregarMetricas,
+    criarHospital,
+    atualizarHospital,
+    removerHospital,
+  } = useHospitais();
+
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Hospital>(empty());
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<FormState>(emptyForm());
   const [confirm, setConfirm] = useState<null | {
     tipo: "salvar" | "excluir";
-    item: Hospital;
+    hospital: HospitalResponseDTO | null;
   }>(null);
 
   const filtered = useMemo(
     () =>
-      items.filter(
+      hospitais.filter(
         (h) =>
           h.nome.toLowerCase().includes(search.toLowerCase()) ||
           h.cidade.toLowerCase().includes(search.toLowerCase()),
       ),
-    [items, search],
+    [hospitais, search],
   );
 
-  const ativos = items.filter((h) => h.status === "Ativo").length;
-  const lotados = items.filter((h) => h.status === "Lotado").length;
-  const manut = items.filter((h) => h.status === "Em manutenção").length;
-
   const openCreate = () => {
-    setEditing(empty());
+    setForm(emptyForm());
     setFormOpen(true);
   };
-  const openEdit = (h: Hospital) => {
-    setEditing(h);
-    setFormOpen(true);
-  };
-  const requestSave = () => setConfirm({ tipo: "salvar", item: editing });
-  const requestDelete = (h: Hospital) =>
-    setConfirm({ tipo: "excluir", item: h });
 
-  const doConfirm = () => {
+  const openEdit = (h: HospitalResponseDTO) => {
+    setForm(hospitalToForm(h));
+    setFormOpen(true);
+  };
+
+  const requestSave = () => setConfirm({ tipo: "salvar", hospital: null });
+
+  const requestDelete = (h: HospitalResponseDTO) =>
+    setConfirm({ tipo: "excluir", hospital: h });
+
+  const doConfirm = async () => {
     if (!confirm) return;
-    if (confirm.tipo === "salvar") {
-      if (editing.id) {
-        setItems((prev) =>
-          prev.map((h) => (h.id === editing.id ? editing : h)),
-        );
-        showToast("Hospital atualizado");
-      } else {
-        setItems((prev) => [{ ...editing, id: `h-${Date.now()}` }, ...prev]);
-        showToast("Hospital cadastrado");
+
+    setSaving(true);
+    try {
+      if (confirm.tipo === "salvar") {
+        const request = formToRequest(form);
+        if (form.id) {
+          await atualizarHospital(form.id, request);
+          showToast("Hospital atualizado com sucesso");
+        } else {
+          await criarHospital(request);
+          showToast("Hospital cadastrado com sucesso");
+        }
+        await carregarMetricas();
+        setFormOpen(false);
+      } else if (confirm.tipo === "excluir" && confirm.hospital) {
+        await removerHospital(confirm.hospital.id);
+        await carregarMetricas();
+        showToast("Hospital removido", "info");
       }
-      setFormOpen(false);
-    } else {
-      setItems((prev) => prev.filter((h) => h.id !== confirm.item.id));
-      showToast("Hospital removido", "info");
+    } catch (err) {
+      console.error("Erro na operação:", err);
+      showToast("Erro ao realizar operação. Tente novamente.", "error");
+    } finally {
+      setSaving(false);
+      setConfirm(null);
     }
-    setConfirm(null);
+  };
+
+  const handleRefresh = async () => {
+    await Promise.all([carregarHospitais(), carregarMetricas()]);
   };
 
   return (
@@ -131,24 +213,45 @@ export const Hospitais = () => {
         title="Hospitais"
         subtitle="Cadastre e gerencie as unidades hospitalares"
         actions={
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={openCreate}
-          >
-            Novo hospital
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Recarregar">
+              <IconButton
+                onClick={handleRefresh}
+                disabled={loading || loadingMetricas}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={openCreate}
+              disabled={loading}
+            >
+              Novo hospital
+            </Button>
+          </Stack>
         }
       />
-
-      {/* FIX 2: Grid v6 — removido `container` + `item` + `xs/sm/md` diretos.
-          Agora usa `<Grid container>` no pai e `<Grid size={{ xs, sm, md }}>` nos filhos. */}
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={
+            <Button color="inherit" size="small" onClick={handleRefresh}>
+              Tentar novamente
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCardAdmin
             icon={<LocalHospitalIcon />}
             label="Total"
-            value={items.length}
+            value={loadingMetricas ? "—" : (metricas?.totalHospitais ?? 0)}
             color="primary"
           />
         </Grid>
@@ -156,7 +259,7 @@ export const Hospitais = () => {
           <StatCardAdmin
             icon={<LocalHospitalIcon />}
             label="Ativos"
-            value={ativos}
+            value={loadingMetricas ? "—" : (metricas?.ativoHospitais ?? 0)}
             color="success"
           />
         </Grid>
@@ -164,7 +267,7 @@ export const Hospitais = () => {
           <StatCardAdmin
             icon={<LocalHospitalIcon />}
             label="Lotados"
-            value={lotados}
+            value={loadingMetricas ? "—" : (metricas?.lotadoHospitais ?? 0)}
             color="warning"
           />
         </Grid>
@@ -172,7 +275,9 @@ export const Hospitais = () => {
           <StatCardAdmin
             icon={<LocalHospitalIcon />}
             label="Em manutenção"
-            value={manut}
+            value={
+              loadingMetricas ? "—" : (metricas?.emManutencaoHospitais ?? 0)
+            }
             color="info"
           />
         </Grid>
@@ -180,7 +285,6 @@ export const Hospitais = () => {
 
       <Card sx={{ mb: 2 }}>
         <CardContent>
-          {/* FIX 3: `InputProps` → `slotProps={{ input: ... }}` (API renomeada no MUI v6) */}
           <TextField
             fullWidth
             size="small"
@@ -208,81 +312,64 @@ export const Hospitais = () => {
                 <TableCell>Hospital</TableCell>
                 <TableCell>CNPJ</TableCell>
                 <TableCell>Cidade</TableCell>
-                <TableCell>Especialidades</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {filtered.map((h) => (
-                <TableRow key={h.id} hover>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {h.nome}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {h.endereco}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{h.cnpj}</TableCell>
-                  <TableCell>
-                    {h.cidade}/{h.estado}
-                  </TableCell>
-                  <TableCell>
-                    {/* FIX 1: `gap` e `flexWrap` → dentro de `sx` */}
-                    <Stack direction="row" sx={{ gap: 0.5, flexWrap: "wrap" }}>
-                      {h.especialidadesIds.map((id) => {
-                        const esp = ESPECIALIDADES_MOCK.find(
-                          (e) => e.id === id,
-                        );
-                        if (!esp) return null;
-                        return (
-                          <Chip
-                            key={id}
-                            label={esp.nome}
-                            size="small"
-                            sx={{
-                              bgcolor: `${esp.cor}22`,
-                              color: esp.cor,
-                              fontWeight: 600,
-                            }}
-                          />
-                        );
-                      })}
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={h.status}
-                      color={STATUS_COR[h.status]}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Editar">
-                      <IconButton onClick={() => openEdit(h)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Excluir">
-                      <IconButton
-                        color="error"
-                        onClick={() => requestDelete(h)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={32} />
                   </TableCell>
                 </TableRow>
-              ))}
-              {filtered.length === 0 && (
+              ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
                     <Typography color="text.secondary">
                       Nenhum hospital encontrado
                     </Typography>
                   </TableCell>
                 </TableRow>
+              ) : (
+                filtered.map((h) => (
+                  <TableRow key={h.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {h.nome}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {h.endereco}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{maskCnpj(h.cnpj)}</TableCell>
+                    <TableCell>
+                      {h.cidade}/{h.estado}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={STATUS_LABEL[h.statusHospital]}
+                        color={STATUS_COR[h.statusHospital]}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Editar">
+                        <IconButton onClick={() => openEdit(h)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Excluir">
+                        <IconButton
+                          color="error"
+                          onClick={() => requestDelete(h)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
@@ -291,7 +378,7 @@ export const Hospitais = () => {
 
       <Dialog
         open={formOpen}
-        onClose={() => setFormOpen(false)}
+        onClose={() => !saving && setFormOpen(false)}
         maxWidth="md"
         fullWidth
         slotProps={{ paper: { sx: { borderRadius: 3 } } }}
@@ -306,126 +393,79 @@ export const Hospitais = () => {
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {editing.id ? "Editar hospital" : "Novo hospital"}
+            {form.id ? "Editar hospital" : "Novo hospital"}
           </Typography>
-          <IconButton onClick={() => setFormOpen(false)}>
+          <IconButton onClick={() => setFormOpen(false)} disabled={saving}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
+
         <DialogContent sx={{ pt: 3, display: "grid", gap: 2 }}>
           <TextField
             label="Nome do hospital"
             fullWidth
-            value={editing.nome}
-            onChange={(e) => setEditing({ ...editing, nome: e.target.value })}
+            value={form.nome}
+            onChange={(e) => setForm({ ...form, nome: e.target.value })}
           />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               label="CNPJ"
               fullWidth
-              value={editing.cnpj}
-              onChange={(e) => setEditing({ ...editing, cnpj: e.target.value })}
+              placeholder="00.000.000/0000-00"
+              value={form.cnpj}
+              onChange={(e) =>
+                setForm({ ...form, cnpj: maskCnpj(e.target.value) })
+              }
+              slotProps={{ htmlInput: { maxLength: 18 } }}
             />
-            <TextField
+            {/* <TextField
               label="Telefone"
               fullWidth
-              value={editing.telefone}
-              onChange={(e) =>
-                setEditing({ ...editing, telefone: e.target.value })
-              }
-            />
+              value={form.telefone}
+              onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+            /> */}
           </Stack>
           <TextField
             label="Endereço"
             fullWidth
-            value={editing.endereco}
-            onChange={(e) =>
-              setEditing({ ...editing, endereco: e.target.value })
-            }
+            value={form.endereco}
+            onChange={(e) => setForm({ ...form, endereco: e.target.value })}
           />
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               label="Cidade"
               fullWidth
-              value={editing.cidade}
-              onChange={(e) =>
-                setEditing({ ...editing, cidade: e.target.value })
-              }
+              value={form.cidade}
+              onChange={(e) => setForm({ ...form, cidade: e.target.value })}
             />
             <TextField
               label="Estado"
               fullWidth
-              value={editing.estado}
-              onChange={(e) =>
-                setEditing({ ...editing, estado: e.target.value })
-              }
+              value={form.estado}
+              onChange={(e) => setForm({ ...form, estado: e.target.value })}
             />
             <FormControl fullWidth>
               <InputLabel>Status</InputLabel>
               <Select
                 label="Status"
-                value={editing.status}
+                value={form.statusHospital}
                 onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    status: e.target.value as StatusHospital,
+                  setForm({
+                    ...form,
+                    statusHospital: e.target.value as StatusHospitalResponseAPI,
                   })
                 }
               >
-                {(
-                  [
-                    "Ativo",
-                    "Inativo",
-                    "Lotado",
-                    "Em manutenção",
-                  ] as StatusHospital[]
-                ).map((s) => (
+                {STATUS_OPTIONS.map((s) => (
                   <MenuItem key={s} value={s}>
-                    {s}
+                    {STATUS_LABEL[s]}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Stack>
-          <FormControl fullWidth>
-            <InputLabel>Especialidades</InputLabel>
-            <Select
-              multiple
-              value={editing.especialidadesIds}
-              onChange={(e) =>
-                setEditing({
-                  ...editing,
-                  especialidadesIds: e.target.value as string[],
-                })
-              }
-              input={<OutlinedInput label="Especialidades" />}
-              renderValue={(selected) => (
-                <Stack direction="row" sx={{ gap: 0.5, flexWrap: "wrap" }}>
-                  {(selected as string[]).map((id) => {
-                    const esp = ESPECIALIDADES_MOCK.find((e) => e.id === id);
-                    return esp ? (
-                      <Chip
-                        key={id}
-                        label={esp.nome}
-                        size="small"
-                        sx={{ bgcolor: `${esp.cor}22`, color: esp.cor }}
-                      />
-                    ) : null;
-                  })}
-                </Stack>
-              )}
-            >
-              {ESPECIALIDADES_MOCK.map((esp) => (
-                <MenuItem key={esp.id} value={esp.id}>
-                  <Checkbox
-                    checked={editing.especialidadesIds.includes(esp.id)}
-                  />
-                  <ListItemText primary={esp.nome} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
         </DialogContent>
+
         <DialogActions
           sx={{ p: 2, borderTop: "1px solid", borderColor: "divider" }}
         >
@@ -433,10 +473,16 @@ export const Hospitais = () => {
             onClick={() => setFormOpen(false)}
             variant="outlined"
             color="inherit"
+            disabled={saving}
           >
             Cancelar
           </Button>
-          <Button onClick={requestSave} variant="contained">
+          <Button
+            onClick={requestSave}
+            variant="contained"
+            disabled={saving}
+            startIcon={saving ? <CircularProgress size={16} /> : undefined}
+          >
             Salvar
           </Button>
         </DialogActions>
@@ -449,7 +495,7 @@ export const Hospitais = () => {
         }
         message={
           confirm?.tipo === "excluir"
-            ? `Deseja realmente excluir o hospital "${confirm.item.nome}"?`
+            ? `Deseja realmente excluir o hospital "${confirm.hospital?.nome}"?`
             : "Deseja salvar as alterações deste hospital?"
         }
         variant={confirm?.tipo === "excluir" ? "danger" : "info"}
@@ -460,4 +506,4 @@ export const Hospitais = () => {
       />
     </Box>
   );
-}
+};
