@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Avatar,
   Box,
@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -39,105 +40,188 @@ import CloseIcon from "@mui/icons-material/Close";
 import { AdminPageHeader } from "../../../components/AdminPageHeader";
 import { ConfirmActionModal } from "../../../components/modais/ModalConfirmAction";
 import { useToast } from "../../../contexts/ToastContext";
-import {
-  type TipoUsuario,
-  type UsuarioAdm,
-  HOSPITAIS_MOCK,
-  USUARIOS_MOCK,
-  ESPECIALIDADES_MOCK,
-} from "../../../mocks/adminMock";
+import { useHospitais } from "../../../hooks/useHospital";
+import { useUsuarios } from "../../../hooks/useUsuario";
+import type {
+  TipoUsuarioResponseAPI,
+  UsuarioResponseDTO,
+} from "../../../service/api/usuarioService";
 
-const TIPO_COR: Record<TipoUsuario, "primary" | "info" | "warning"> = {
+type TipoFiltro = TipoUsuarioResponseAPI | "TODOS";
+
+const TIPO_COR: Record<
+  Exclude<TipoUsuarioResponseAPI, "PACIENTE">,
+  "primary" | "info" | "warning"
+> = {
   ADMINISTRADOR: "warning",
   MEDICO: "info",
   RECEPCAO: "primary",
 };
 
-const PAGE_SIZE = 6;
-const empty = (): UsuarioAdm => ({
-  id: "",
+interface UsuarioForm {
+  id?: number;
+  nome: string;
+  email: string;
+  senha: string;
+  cpf: string;
+  telefone: string;
+  tipoUsuario: TipoUsuarioResponseAPI;
+  hospitalId: number | "";
+  ativo: boolean;
+}
+
+const emptyForm = (): UsuarioForm => ({
   nome: "",
   email: "",
+  senha: "",
   cpf: "",
   telefone: "",
-  hospitalId: HOSPITAIS_MOCK[0].id,
-  tipo: "MEDICO",
+  tipoUsuario: "MEDICO",
+  hospitalId: "",
   ativo: true,
 });
 
+const fromResponse = (u: UsuarioResponseDTO): UsuarioForm => ({
+  id: u.id,
+  nome: u.nome,
+  email: u.email,
+  senha: "",
+  cpf: u.cpf,
+  telefone: u.telefone,
+  tipoUsuario: u.tipoUsuario,
+  hospitalId: u.hospital?.id ?? "",
+  ativo: u.ativo,
+});
+
+const PAGE_SIZE = 6;
+
+const maskCpf = (v: string) =>
+  v
+    .replace(/\D/g, "")
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+
+const maskTelefone = (v: string) => {
+  const d = v.replace(/\D/g, "").slice(0, 11);
+  if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+  return d.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
+};
+
 export const Usuarios = () => {
   const { showToast } = useToast();
-  const [users, setUsers] = useState<UsuarioAdm[]>(USUARIOS_MOCK);
+
+  const {
+    usuarios,
+    loading,
+    fetchUsuarios,
+    buscarUsuarioPorId,
+    criarUsuario,
+    atualizarUsuario,
+    removerUsuario,
+  } = useUsuarios();
+
+  const { hospitais } = useHospitais();
+
+  useEffect(() => {
+    fetchUsuarios();
+  }, [fetchUsuarios]);
+
   const [search, setSearch] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState<TipoUsuario | "TODOS">("TODOS");
+  const [filtroTipo, setFiltroTipo] = useState<TipoFiltro>("TODOS");
   const [page, setPage] = useState(1);
 
-  // FIX 1: estava `const [, setFormOpen]` — o getter estava sendo descartado,
-  // fazendo o Dialog nunca abrir e o botão "Novo usuário" não funcionar.
-  const [formOpen, setFormOpen] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
-  const [confirm, setConfirm] = useState<null | {
-    tipo: "salvar" | "excluir";
-    user: UsuarioAdm;
-  }>(null);
-  const [editing, setEditing] = useState<UsuarioAdm>(empty());
-  const [viewing, setViewing] = useState<UsuarioAdm | null>(null);
-
   const filtered = useMemo(() => {
-    return users.filter((u) => {
+    return usuarios.filter((u) => {
       const matchSearch =
         u.nome.toLowerCase().includes(search.toLowerCase()) ||
         u.email.toLowerCase().includes(search.toLowerCase());
-      const matchTipo = filtroTipo === "TODOS" || u.tipo === filtroTipo;
+      const matchTipo = filtroTipo === "TODOS" || u.tipoUsuario === filtroTipo;
       return matchSearch && matchTipo;
     });
-  }, [users, search, filtroTipo]);
+  }, [usuarios, search, filtroTipo]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const [formOpen, setFormOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [confirm, setConfirm] = useState<null | {
+    tipo: "salvar" | "excluir";
+    user: UsuarioForm;
+  }>(null);
+  const [editing, setEditing] = useState<UsuarioForm>(emptyForm());
+  const [viewing, setViewing] = useState<UsuarioResponseDTO | null>(null);
+
   const openCreate = () => {
-    setEditing(empty());
+    setEditing(emptyForm());
     setFormOpen(true);
   };
-  const openEdit = (u: UsuarioAdm) => {
-    setEditing(u);
+
+  const openEdit = (u: UsuarioResponseDTO) => {
+    setEditing(fromResponse(u));
     setFormOpen(true);
   };
-  const openView = (u: UsuarioAdm) => {
-    setViewing(u);
+
+  const openView = async (u: UsuarioResponseDTO) => {
+    setViewing(null);
     setViewOpen(true);
+    setViewLoading(true);
+    try {
+      const fresh = await buscarUsuarioPorId(u.id);
+      setViewing(fresh);
+    } catch {
+      showToast("Erro ao carregar detalhes do usuário.", "error");
+      setViewOpen(false);
+    } finally {
+      setViewLoading(false);
+    }
   };
 
   const requestSave = () => setConfirm({ tipo: "salvar", user: editing });
-  const requestDelete = (u: UsuarioAdm) =>
-    setConfirm({ tipo: "excluir", user: u });
+  const requestDelete = (u: UsuarioResponseDTO) =>
+    setConfirm({ tipo: "excluir", user: fromResponse(u) });
 
-  const doConfirm = () => {
+  const doConfirm = async () => {
     if (!confirm) return;
-    if (confirm.tipo === "salvar") {
-      if (editing.id) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === editing.id ? editing : u)),
-        );
-        showToast("Usuário atualizado com sucesso");
+    setSaving(true);
+    try {
+      if (confirm.tipo === "salvar") {
+        const { id, senha, hospitalId, ...rest } = confirm.user;
+
+        if (id) {
+          await atualizarUsuario(id, {
+            ...rest,
+            ...(senha ? { senha } : {}),
+            hospitalId: Number(hospitalId),
+          });
+          showToast("Usuário atualizado com sucesso");
+        } else {
+          await criarUsuario({
+            ...rest,
+            senha,
+            hospitalId: Number(hospitalId),
+          });
+          showToast("Usuário criado com sucesso");
+        }
+        setFormOpen(false);
       } else {
-        const novo = { ...editing, id: `u-${Date.now()}` };
-        setUsers((prev) => [novo, ...prev]);
-        showToast("Usuário criado com sucesso");
+        await removerUsuario(confirm.user.id!);
+        showToast("Usuário removido", "info");
       }
-      setFormOpen(false);
-    } else {
-      setUsers((prev) => prev.filter((u) => u.id !== confirm.user.id));
-      showToast("Usuário removido", "info");
+    } catch {
+      showToast("Ocorreu um erro. Tente novamente.", "error");
+    } finally {
+      setSaving(false);
+      setConfirm(null);
     }
-    setConfirm(null);
   };
 
-  const hospitalNome = (id: string) =>
-    HOSPITAIS_MOCK.find((h) => h.id === id)?.nome ?? "—";
-  const especNome = (id?: string) =>
-    ESPECIALIDADES_MOCK.find((e) => e.id === id)?.nome ?? "—";
+  const hospitalNome = (id: number) =>
+    hospitais?.find((h: any) => h.id === id)?.nome ?? "—";
 
   return (
     <Box>
@@ -211,7 +295,14 @@ export const Usuarios = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {pageRows.length === 0 && (
+              {loading && (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={32} />
+                  </TableCell>
+                </TableRow>
+              )}
+              {!loading && pageRows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
                     <Typography color="text.secondary">
@@ -220,82 +311,90 @@ export const Usuarios = () => {
                   </TableCell>
                 </TableRow>
               )}
-              {pageRows.map((u) => (
-                <TableRow key={u.id} hover>
-                  <TableCell>
-                    <Stack
-                      direction="row"
-                      spacing={1.5}
-                      sx={{ alignItems: "center" }}
-                    >
-                      <Avatar
-                        sx={{
-                          bgcolor: "primary.main",
-                          width: 36,
-                          height: 36,
-                          fontSize: 14,
-                        }}
+              {!loading &&
+                pageRows.map((u) => (
+                  <TableRow key={u.id} hover>
+                    <TableCell>
+                      <Stack
+                        direction="row"
+                        spacing={1.5}
+                        sx={{ alignItems: "center" }}
                       >
-                        {u.nome
-                          .split(" ")
-                          .map((p) => p[0])
-                          .slice(0, 2)
-                          .join("")}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {u.nome}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {u.cpf}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{u.email}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {u.telefone}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{hospitalNome(u.hospitalId)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={u.tipo}
-                      color={TIPO_COR[u.tipo]}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={u.ativo ? "Ativo" : "Inativo"}
-                      color={u.ativo ? "success" : "default"}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Visualizar">
-                      <IconButton onClick={() => openView(u)}>
-                        <VisibilityIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Editar">
-                      <IconButton onClick={() => openEdit(u)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Excluir">
-                      <IconButton
-                        color="error"
-                        onClick={() => requestDelete(u)}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        <Avatar
+                          sx={{
+                            bgcolor: "primary.main",
+                            width: 36,
+                            height: 36,
+                            fontSize: 14,
+                          }}
+                        >
+                          {u.nome
+                            .split(" ")
+                            .map((p) => p[0])
+                            .slice(0, 2)
+                            .join("")}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {u.nome}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {u.cpf}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{u.email}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {u.telefone}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{hospitalNome(u.hospital?.id)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={u.tipoUsuario}
+                        color={
+                          TIPO_COR[
+                            u.tipoUsuario as Exclude<
+                              TipoUsuarioResponseAPI,
+                              "PACIENTE"
+                            >
+                          ] ?? "default"
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={u.ativo ? "Ativo" : "Inativo"}
+                        color={u.ativo ? "success" : "default"}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Visualizar">
+                        <IconButton onClick={() => openView(u)}>
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Editar">
+                        <IconButton onClick={() => openEdit(u)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Excluir">
+                        <IconButton
+                          color="error"
+                          onClick={() => requestDelete(u)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
@@ -309,15 +408,12 @@ export const Usuarios = () => {
         </Stack>
       </Card>
 
-      {/* Form modal — FIX 2: era open={viewOpen}, corrigido para open={formOpen} */}
       <Dialog
         open={formOpen}
         onClose={() => setFormOpen(false)}
         maxWidth="sm"
         fullWidth
-        slotProps={{
-          paper: { sx: { borderRadius: 3 } },
-        }}
+        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
       >
         <DialogTitle
           sx={{
@@ -355,67 +451,65 @@ export const Usuarios = () => {
               label="CPF"
               fullWidth
               value={editing.cpf}
-              onChange={(e) => setEditing({ ...editing, cpf: e.target.value })}
+              onChange={(e) =>
+                setEditing({ ...editing, cpf: maskCpf(e.target.value) })
+              }
             />
           </Stack>
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              label={editing.id ? "Nova senha (opcional)" : "Senha"}
+              type="password"
+              fullWidth
+              value={editing.senha}
+              onChange={(e) =>
+                setEditing({ ...editing, senha: e.target.value })
+              }
+            />
             <TextField
               label="Telefone"
               fullWidth
               value={editing.telefone}
               onChange={(e) =>
-                setEditing({ ...editing, telefone: e.target.value })
+                setEditing({
+                  ...editing,
+                  telefone: maskTelefone(e.target.value),
+                })
               }
             />
+          </Stack>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <FormControl fullWidth>
               <InputLabel>Hospital</InputLabel>
               <Select
                 label="Hospital"
                 value={editing.hospitalId}
                 onChange={(e) =>
-                  setEditing({ ...editing, hospitalId: e.target.value })
+                  setEditing({ ...editing, hospitalId: Number(e.target.value) })
                 }
               >
-                {HOSPITAIS_MOCK.map((h) => (
+                {hospitais?.map((h: any) => (
                   <MenuItem key={h.id} value={h.id}>
                     {h.nome}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
-          </Stack>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <FormControl fullWidth>
               <InputLabel>Tipo</InputLabel>
               <Select
                 label="Tipo"
-                value={editing.tipo}
+                value={editing.tipoUsuario}
                 onChange={(e) =>
                   setEditing({
                     ...editing,
-                    tipo: e.target.value as TipoUsuario,
+                    tipoUsuario: e.target.value as TipoUsuarioResponseAPI,
                   })
                 }
               >
                 <MenuItem value="ADMINISTRADOR">Administrador</MenuItem>
                 <MenuItem value="MEDICO">Médico</MenuItem>
                 <MenuItem value="RECEPCAO">Recepção</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth disabled={editing.tipo !== "MEDICO"}>
-              <InputLabel>Especialidade</InputLabel>
-              <Select
-                label="Especialidade"
-                value={editing.especialidadeId ?? ""}
-                onChange={(e) =>
-                  setEditing({ ...editing, especialidadeId: e.target.value })
-                }
-              >
-                {ESPECIALIDADES_MOCK.map((esp) => (
-                  <MenuItem key={esp.id} value={esp.id}>
-                    {esp.nome}
-                  </MenuItem>
-                ))}
               </Select>
             </FormControl>
           </Stack>
@@ -452,15 +546,13 @@ export const Usuarios = () => {
         </DialogActions>
       </Dialog>
 
-      {/* View modal */}
+      {/* ── Modal: Visualizar ── */}
       <Dialog
         open={viewOpen}
         onClose={() => setViewOpen(false)}
         maxWidth="xs"
         fullWidth
-        slotProps={{
-          paper: { sx: { borderRadius: 3 } },
-        }}
+        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
       >
         <DialogTitle
           sx={{
@@ -478,66 +570,81 @@ export const Usuarios = () => {
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        {viewing && (
-          <DialogContent sx={{ pt: 3 }}>
-            <Stack
-              direction="row"
-              spacing={2}
-              sx={{ alignItems: "center", mb: 3 }}
-            >
-              <Avatar
-                sx={{
-                  bgcolor: "primary.main",
-                  width: 56,
-                  height: 56,
-                  fontSize: 20,
-                }}
-              >
-                {viewing.nome
-                  .split(" ")
-                  .map((p) => p[0])
-                  .slice(0, 2)
-                  .join("")}
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  {viewing.nome}
-                </Typography>
-                <Chip
-                  label={viewing.tipo}
-                  size="small"
-                  color={TIPO_COR[viewing.tipo]}
-                />
-              </Box>
+
+        <DialogContent sx={{ pt: 3 }}>
+          {viewLoading ? (
+            <Stack sx={{ alignItems: "center", py: 4 }}>
+              <CircularProgress size={32} />
             </Stack>
-            {[
-              ["E-mail", viewing.email],
-              ["CPF", viewing.cpf],
-              ["Telefone", viewing.telefone],
-              ["Hospital", hospitalNome(viewing.hospitalId)],
-              ["Especialidade", especNome(viewing.especialidadeId)],
-              ["Status", viewing.ativo ? "Ativo" : "Inativo"],
-            ].map(([k, v]) => (
+          ) : viewing ? (
+            <>
               <Stack
-                key={k}
                 direction="row"
-                sx={{
-                  justifyContent: "space-between",
-                  py: 1,
-                  borderBottom: "1px dashed",
-                  borderColor: "divider",
-                }}
+                spacing={2}
+                sx={{ alignItems: "center", mb: 3 }}
               >
-                <Typography variant="body2" color="text.secondary">
-                  {k}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {v}
-                </Typography>
+                <Avatar
+                  sx={{
+                    bgcolor: "primary.main",
+                    width: 56,
+                    height: 56,
+                    fontSize: 20,
+                  }}
+                >
+                  {viewing.nome
+                    .split(" ")
+                    .map((p) => p[0])
+                    .slice(0, 2)
+                    .join("")}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {viewing.nome}
+                  </Typography>
+                  <Chip
+                    label={viewing.tipoUsuario}
+                    size="small"
+                    color={
+                      TIPO_COR[
+                        viewing.tipoUsuario as Exclude<
+                          TipoUsuarioResponseAPI,
+                          "PACIENTE"
+                        >
+                      ] ?? "default"
+                    }
+                  />
+                </Box>
               </Stack>
-            ))}
-          </DialogContent>
-        )}
+              {(
+                [
+                  ["E-mail", viewing.email],
+                  ["CPF", viewing.cpf],
+                  ["Telefone", viewing.telefone],
+                  ["Hospital", viewing.hospital?.nome ?? "—"],
+                  ["Status", viewing.ativo ? "Ativo" : "Inativo"],
+                ] as [string, string][]
+              ).map(([k, v]) => (
+                <Stack
+                  key={k}
+                  direction="row"
+                  sx={{
+                    justifyContent: "space-between",
+                    py: 1,
+                    borderBottom: "1px dashed",
+                    borderColor: "divider",
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {k}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {v}
+                  </Typography>
+                </Stack>
+              ))}
+            </>
+          ) : null}
+        </DialogContent>
       </Dialog>
 
       <ConfirmActionModal
@@ -553,6 +660,7 @@ export const Usuarios = () => {
         variant={confirm?.tipo === "excluir" ? "danger" : "info"}
         icon={confirm?.tipo === "excluir" ? "delete" : "save"}
         confirmLabel={confirm?.tipo === "excluir" ? "Excluir" : "Salvar"}
+        loading={saving}
         onClose={() => setConfirm(null)}
         onConfirm={doConfirm}
       />
