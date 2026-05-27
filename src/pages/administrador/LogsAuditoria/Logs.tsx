@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
-
 import {
   Box,
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   FormControl,
   InputAdornment,
   InputLabel,
   MenuItem,
+  Pagination,
   Select,
   Table,
   TableBody,
@@ -19,37 +20,46 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-
 import SearchIcon from "@mui/icons-material/Search";
-
 import { AdminPageHeader } from "../../../components/AdminPageHeader";
-
-import { LOGS_MOCK } from "../../../mocks/adminMock";
+import { useLogs } from "../../../hooks/useLogs";
 
 export default function Logs() {
   const [search, setSearch] = useState("");
-
-  const [user, setUser] = useState("TODOS");
-
+  const [modulo, setModulo] = useState("");
   const [date, setDate] = useState("");
 
-  const usuarios = Array.from(new Set(LOGS_MOCK.map((l) => l.usuario)));
+  const { logs, totalPages, page, loading, fetchLogs } = useLogs();
+
+  const modulos = useMemo(
+    () => Array.from(new Set(logs.map((l) => l.modulo))),
+    [logs],
+  );
 
   const filtered = useMemo(
     () =>
-      LOGS_MOCK.filter((l) => {
+      logs.filter((l) => {
         const matchS =
           l.acao.toLowerCase().includes(search.toLowerCase()) ||
           l.modulo.toLowerCase().includes(search.toLowerCase());
 
-        const matchU = user === "TODOS" || l.usuario === user;
+        const matchM = !modulo || l.modulo === modulo;
 
-        const matchD = !date || l.data.startsWith(date);
+        const matchD = !date || l.criadoEm.startsWith(date);
 
-        return matchS && matchU && matchD;
+        return matchS && matchM && matchD;
       }),
-    [search, user, date],
+    [logs, search, modulo, date],
   );
+
+  const handleModuloChange = (value: string) => {
+    setModulo(value);
+    fetchLogs(0, undefined, value || undefined);
+  };
+
+  const handlePageChange = (_: unknown, newPage: number) => {
+    fetchLogs(newPage - 1, undefined, modulo || undefined);
+  };
 
   return (
     <Box>
@@ -63,10 +73,7 @@ export default function Logs() {
           <Box
             sx={{
               display: "flex",
-              flexDirection: {
-                xs: "column",
-                md: "row",
-              },
+              flexDirection: { xs: "column", md: "row" },
               gap: 2,
             }}
           >
@@ -88,18 +95,16 @@ export default function Logs() {
             />
 
             <FormControl size="small" sx={{ minWidth: 220 }}>
-              <InputLabel>Usuário</InputLabel>
-
+              <InputLabel>Módulo</InputLabel>
               <Select
-                label="Usuário"
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
+                label="Módulo"
+                value={modulo}
+                onChange={(e) => handleModuloChange(e.target.value)}
               >
-                <MenuItem value="TODOS">Todos</MenuItem>
-
-                {usuarios.map((u) => (
-                  <MenuItem key={u} value={u}>
-                    {u}
+                <MenuItem value="">Todos</MenuItem>
+                {modulos.map((m) => (
+                  <MenuItem key={m} value={m}>
+                    {m}
                   </MenuItem>
                 ))}
               </Select>
@@ -112,9 +117,7 @@ export default function Logs() {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               slotProps={{
-                inputLabel: {
-                  shrink: true,
-                },
+                inputLabel: { shrink: true },
               }}
             />
           </Box>
@@ -122,57 +125,73 @@ export default function Logs() {
       </Card>
 
       <Card>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Usuário</TableCell>
-                <TableCell>Ação</TableCell>
-                <TableCell>Módulo</TableCell>
-                <TableCell>Data</TableCell>
-                <TableCell>Horário</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {filtered.map((l) => {
-                const d = new Date(l.data);
-
-                return (
-                  <TableRow key={l.id} hover>
-                    <TableCell sx={{ fontWeight: 600 }}>{l.usuario}</TableCell>
-
-                    <TableCell>{l.acao}</TableCell>
-
-                    <TableCell>
-                      <Chip size="small" label={l.modulo} variant="outlined" />
-                    </TableCell>
-
-                    <TableCell>{d.toLocaleDateString("pt-BR")}</TableCell>
-
-                    <TableCell
-                      sx={{
-                        color: "text.secondary",
-                      }}
-                    >
-                      {d.toLocaleTimeString("pt-BR")}
-                    </TableCell>
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Usuário</TableCell>
+                    <TableCell>Ação</TableCell>
+                    <TableCell>Módulo</TableCell>
+                    <TableCell>Data</TableCell>
+                    <TableCell>Horário</TableCell>
                   </TableRow>
-                );
-              })}
+                </TableHead>
 
-              {filtered.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
-                    <Typography color="text.secondary">
-                      Nenhum log encontrado
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                <TableBody>
+                  {filtered.map((l) => {
+                    const d = new Date(l.criadoEm);
+                    return (
+                      <TableRow key={l.id} hover>
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          {l.nomeUsuario}
+                        </TableCell>
+                        <TableCell>{l.acao}</TableCell>
+                        <TableCell>
+                          <Chip
+                            size="small"
+                            label={l.modulo}
+                            variant="outlined"
+                          />
+                        </TableCell>
+                        <TableCell>{d.toLocaleDateString("pt-BR")}</TableCell>
+                        <TableCell sx={{ color: "text.secondary" }}>
+                          {d.toLocaleTimeString("pt-BR")}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+
+                  {filtered.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                        <Typography color="text.secondary">
+                          Nenhum log encontrado
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {totalPages > 1 && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page + 1}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
+            )}
+          </>
+        )}
       </Card>
     </Box>
   );

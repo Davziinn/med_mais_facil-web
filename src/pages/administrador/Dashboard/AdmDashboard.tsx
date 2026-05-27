@@ -46,9 +46,9 @@ import {
   DASHBOARD_STATS,
   ATENDIMENTOS_SEMANA,
   CHAMADOS_PRIORIDADE,
-  LOGS_MOCK,
 } from "../../../mocks/adminMock";
 import { StatCardAdmin } from "../../../components/StatCardAdmin";
+import { useLogs } from "../../../hooks/useLogs";
 
 const stats = DASHBOARD_STATS;
 
@@ -125,6 +125,8 @@ const cards = [
 ];
 
 export default function AdmDashboard() {
+  const { logs } = useLogs();
+
   return (
     <Box>
       <AdminPageHeader
@@ -157,12 +159,7 @@ export default function AdmDashboard() {
       </Grid>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid
-          size={{
-            xs: 12,
-            md: 7,
-          }}
-        >
+        <Grid size={{ xs: 12, md: 7 }}>
           <Card sx={{ height: "100%" }}>
             <CardContent>
               <Box
@@ -176,7 +173,6 @@ export default function AdmDashboard() {
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   Atendimentos na semana
                 </Typography>
-
                 <Typography variant="caption" color="text.secondary">
                   Últimos 7 dias
                 </Typography>
@@ -186,22 +182,18 @@ export default function AdmDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={ATENDIMENTOS_SEMANA}>
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-
                     <XAxis
                       dataKey="dia"
                       stroke="#64748b"
                       tick={{ fontSize: 12 }}
                     />
-
                     <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
-
                     <RTooltip
                       contentStyle={{
                         borderRadius: 8,
                         border: "1px solid #e2e8f0",
                       }}
                     />
-
                     <Line
                       type="monotone"
                       dataKey="atendimentos"
@@ -217,21 +209,10 @@ export default function AdmDashboard() {
           </Card>
         </Grid>
 
-        <Grid
-          size={{
-            xs: 12,
-            md: 5,
-          }}
-        >
+        <Grid size={{ xs: 12, md: 5 }}>
           <Card sx={{ height: "100%" }}>
             <CardContent>
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  mb: 2,
-                }}
-              >
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
                 Chamados por prioridade
               </Typography>
 
@@ -239,24 +220,19 @@ export default function AdmDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={CHAMADOS_PRIORIDADE}>
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
-
                     <XAxis
                       dataKey="prioridade"
                       stroke="#64748b"
                       tick={{ fontSize: 12 }}
                     />
-
                     <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
-
                     <RTooltip
                       contentStyle={{
                         borderRadius: 8,
                         border: "1px solid #e2e8f0",
                       }}
                     />
-
                     <Legend />
-
                     <Bar dataKey="total" radius={[6, 6, 0, 0]}>
                       {CHAMADOS_PRIORIDADE.map((d) => (
                         <Cell key={d.prioridade} fill={d.cor} />
@@ -272,13 +248,7 @@ export default function AdmDashboard() {
 
       <Card>
         <CardContent>
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              mb: 2,
-            }}
-          >
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
             Atividade recente
           </Typography>
 
@@ -293,27 +263,36 @@ export default function AdmDashboard() {
             </TableHead>
 
             <TableBody>
-              {LOGS_MOCK.slice(0, 6).map((l) => (
-                <TableRow key={l.id} hover>
-                  <TableCell sx={{ fontWeight: 600 }}>{l.usuario}</TableCell>
+              {logs.slice(0, 6).map((l) => {
+                const d = new Date(l.criadoEm);
+                return (
+                  <TableRow key={l.id} hover>
+                    <TableCell sx={{ fontWeight: 600 }}>
+                      {l.nomeUsuario}
+                    </TableCell>
+                    <TableCell>{l.acao}</TableCell>
+                    <TableCell>
+                      <Chip label={l.modulo} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ color: "text.secondary", fontSize: 13 }}
+                    >
+                      {d.toLocaleString("pt-BR")}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
 
-                  <TableCell>{l.acao}</TableCell>
-
-                  <TableCell>
-                    <Chip label={l.modulo} size="small" variant="outlined" />
-                  </TableCell>
-
-                  <TableCell
-                    align="right"
-                    sx={{
-                      color: "text.secondary",
-                      fontSize: 13,
-                    }}
-                  >
-                    {new Date(l.data).toLocaleString("pt-BR")}
+              {logs.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
+                    <Typography color="text.secondary">
+                      Nenhuma atividade recente
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
