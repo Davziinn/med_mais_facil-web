@@ -23,6 +23,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import { AdminPageHeader } from "../../../components/AdminPageHeader";
 import { ConfirmActionModal } from "../../../components/modais/ModalConfirmAction";
 import { useToast } from "../../../contexts/ToastContext";
+import { useConfiguracao } from "../../../hooks/useConfiguracao";
 
 type StatusHosp =
   | "Operando normalmente"
@@ -32,25 +33,29 @@ type StatusHosp =
 
 export const Configuracoes = () => {
   const { showToast } = useToast();
+  const { configuracao, setConfiguracao, updateConfiguracao } =
+    useConfiguracao();
 
-  const [tempoLimite, setTempoLimite] = useState(45);
-  const [maxFila, setMaxFila] = useState(80);
-
-  const [status, setStatus] = useState<StatusHosp>("Operando normalmente");
-
-  const [mensagem, setMensagem] = useState(
-    "Bem-vindo ao Med+Fácil. Acompanhe sua senha em tempo real.",
-  );
-
-  const [notifPush, setNotifPush] = useState(true);
-  const [notifEmail, setNotifEmail] = useState(false);
-  const [chamadaAuto, setChamadaAuto] = useState(true);
+  // const [notifEmail, setNotifEmail] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const doSave = () => {
+  const doSave = async () => {
     setConfirmOpen(false);
-    showToast("Configurações atualizadas com sucesso");
+    try {
+      await updateConfiguracao({
+        tempoLimiteChamado: configuracao.tempoLimiteChamado,
+        quantidadeMaximaFila: configuracao.quantidadeMaximaFila,
+        chamadaAutomatica: configuracao.chamadaAutomatica,
+        statusGeral: configuracao.statusGeral,
+        mensagemPaciente: configuracao.mensagemPaciente,
+        notificacoesPush: configuracao.notificacoesPush,
+      });
+      showToast("Configurações atualizadas com sucesso");
+    } catch (error) {
+      console.error("Erro ao salvar configurações:", error);
+      showToast("Erro ao salvar configurações", "error");
+    }
   };
 
   return (
@@ -105,8 +110,13 @@ export const Configuracoes = () => {
                   </Typography>
 
                   <Slider
-                    value={tempoLimite}
-                    onChange={(_, v) => setTempoLimite(v as number)}
+                    value={configuracao.tempoLimiteChamado}
+                    onChange={(_, v) =>
+                      setConfiguracao({
+                        ...configuracao,
+                        tempoLimiteChamado: v as number,
+                      })
+                    }
                     min={5}
                     max={120}
                     step={5}
@@ -127,8 +137,13 @@ export const Configuracoes = () => {
                   </Typography>
 
                   <Slider
-                    value={maxFila}
-                    onChange={(_, v) => setMaxFila(v as number)}
+                    value={configuracao.quantidadeMaximaFila}
+                    onChange={(_, v) =>
+                      setConfiguracao({
+                        ...configuracao,
+                        quantidadeMaximaFila: v as number,
+                      })
+                    }
                     min={10}
                     max={200}
                     step={5}
@@ -155,8 +170,13 @@ export const Configuracoes = () => {
                   </Box>
 
                   <Switch
-                    checked={chamadaAuto}
-                    onChange={(e) => setChamadaAuto(e.target.checked)}
+                    checked={configuracao.chamadaAutomatica}
+                    onChange={(e) =>
+                      setConfiguracao({
+                        ...configuracao,
+                        chamadaAutomatica: e.target.checked,
+                      })
+                    }
                   />
                 </Stack>
               </Stack>
@@ -188,8 +208,13 @@ export const Configuracoes = () => {
 
                   <Select
                     label="Status geral"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as StatusHosp)}
+                    value={configuracao.statusGeral}
+                    onChange={(e) =>
+                      setConfiguracao({
+                        ...configuracao,
+                        statusGeral: e.target.value as StatusHosp,
+                      })
+                    }
                   >
                     <MenuItem value="Operando normalmente">
                       Operando normalmente
@@ -209,8 +234,13 @@ export const Configuracoes = () => {
                   label="Mensagem exibida ao paciente"
                   multiline
                   rows={3}
-                  value={mensagem}
-                  onChange={(e) => setMensagem(e.target.value)}
+                  value={configuracao.mensagemPaciente}
+                  onChange={(e) =>
+                    setConfiguracao({
+                      ...configuracao,
+                      mensagemPaciente: e.target.value,
+                    })
+                  }
                 />
               </Stack>
             </CardContent>
@@ -253,8 +283,13 @@ export const Configuracoes = () => {
                   </Box>
 
                   <Switch
-                    checked={notifPush}
-                    onChange={(e) => setNotifPush(e.target.checked)}
+                    checked={configuracao.notificacoesPush}
+                    onChange={(e) =>
+                      setConfiguracao({
+                        ...configuracao,
+                        notificacoesPush: e.target.checked,
+                      })
+                    }
                   />
                 </Stack>
 
@@ -265,7 +300,7 @@ export const Configuracoes = () => {
                     justifyContent: "space-between",
                   }}
                 >
-                  <Box>
+                  {/* <Box>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       Notificações por e-mail
                     </Typography>
@@ -276,9 +311,9 @@ export const Configuracoes = () => {
                   </Box>
 
                   <Switch
-                    checked={notifEmail}
-                    onChange={(e) => setNotifEmail(e.target.checked)}
-                  />
+                    checked={configuracao.notificacoesEmail}
+                    onChange={(e) => setConfiguracao({...configuracao, notificacoesEmail: e.target.checked})}
+                  /> */}
                 </Stack>
               </Stack>
             </CardContent>
