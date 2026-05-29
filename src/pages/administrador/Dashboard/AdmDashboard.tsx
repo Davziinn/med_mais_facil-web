@@ -9,6 +9,8 @@ import {
   TableHead,
   TableRow,
   Typography,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 
 import Grid from "@mui/material/Grid";
@@ -41,91 +43,146 @@ import {
 } from "recharts";
 
 import { AdminPageHeader } from "../../../components/AdminPageHeader";
-
-import {
-  DASHBOARD_STATS,
-  ATENDIMENTOS_SEMANA,
-  CHAMADOS_PRIORIDADE,
-} from "../../../mocks/adminMock";
 import { StatCardAdmin } from "../../../components/StatCardAdmin";
 import { useLogs } from "../../../hooks/useLogs";
+import { useAdmDashboard } from "../../../hooks/useAdmDashboard";
 
-const stats = DASHBOARD_STATS;
-
-const cards = [
-  {
-    label: "Pacientes",
-    value: stats.totalPacientes.toLocaleString("pt-BR"),
-    icon: <PeopleIcon />,
-    color: "primary" as const,
-    trend: "+8% esta semana",
-  },
-  {
-    label: "Médicos",
-    value: stats.totalMedicos,
-    icon: <MedicalServicesIcon />,
-    color: "info" as const,
-  },
-  {
-    label: "Recepcionistas",
-    value: stats.totalRecepcionistas,
-    icon: <SupportAgentIcon />,
-    color: "secondary" as const,
-  },
-  {
-    label: "Administradores",
-    value: stats.totalAdministradores,
-    icon: <AdminPanelSettingsIcon />,
-    color: "warning" as const,
-  },
-  {
-    label: "Hospitais",
-    value: stats.totalHospitais,
-    icon: <LocalHospitalIcon />,
-    color: "primary" as const,
-  },
-  {
-    label: "Chamados ativos",
-    value: stats.chamadosAtivos,
-    icon: <PendingActionsIcon />,
-    color: "warning" as const,
-    trend: "Tempo real",
-  },
-  {
-    label: "Finalizados hoje",
-    value: stats.chamadosFinalizadosHoje,
-    icon: <DoneAllIcon />,
-    color: "success" as const,
-    trend: "+12% vs ontem",
-  },
-  {
-    label: "Cancelados",
-    value: stats.chamadosCancelados,
-    icon: <CancelIcon />,
-    color: "error" as const,
-  },
-  {
-    label: "Pacientes ausentes",
-    value: stats.pacientesAusentes,
-    icon: <PersonOffIcon />,
-    color: "error" as const,
-  },
-  {
-    label: "Em atendimento",
-    value: stats.pacientesEmAtendimento,
-    icon: <HealthAndSafetyIcon />,
-    color: "info" as const,
-  },
-  {
-    label: "Em espera",
-    value: stats.pacientesEmEspera,
-    icon: <HourglassTopIcon />,
-    color: "warning" as const,
-  },
-];
+const CORES_PRIORIDADE: Record<string, string> = {
+  CRITICA: "#ef4444",
+  ALTA: "#f97316",
+  MEDIA: "#eab308",
+  BAIXA: "#22c55e",
+};
 
 export default function AdmDashboard() {
   const { logs } = useLogs();
+  const { metricas, loading, error } = useAdmDashboard();
+
+  const hoje = new Date().toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  const cards = metricas
+    ? [
+        {
+          label: "Pacientes",
+          value: metricas.quantidadePacientes.toLocaleString("pt-BR"),
+          icon: <PeopleIcon />,
+          color: "primary" as const,
+        },
+        {
+          label: "Médicos",
+          value: metricas.quantidadeMedicos,
+          icon: <MedicalServicesIcon />,
+          color: "info" as const,
+        },
+        {
+          label: "Recepcionistas",
+          value: metricas.quantidadeRecepcionistas,
+          icon: <SupportAgentIcon />,
+          color: "secondary" as const,
+        },
+        {
+          label: "Administradores",
+          value: metricas.quantidadeAdms,
+          icon: <AdminPanelSettingsIcon />,
+          color: "warning" as const,
+        },
+        {
+          label: "Hospitais",
+          value: metricas.quantidadeHospitais,
+          icon: <LocalHospitalIcon />,
+          color: "primary" as const,
+        },
+        {
+          label: "Chamados ativos",
+          value: metricas.chamadosAtivosHoje,
+          icon: <PendingActionsIcon />,
+          color: "warning" as const,
+          trend: "Tempo real",
+        },
+        {
+          label: "Finalizados hoje",
+          value: metricas.chamadosFinalizadosHoje,
+          icon: <DoneAllIcon />,
+          color: "success" as const,
+        },
+        {
+          label: "Cancelados",
+          value: metricas.chamadosCanceladosHoje,
+          icon: <CancelIcon />,
+          color: "error" as const,
+        },
+        {
+          label: "Pacientes ausentes",
+          value: metricas.quantidadePacientesAusentesHoje,
+          icon: <PersonOffIcon />,
+          color: "error" as const,
+        },
+        {
+          label: "Em atendimento",
+          value: metricas.chamadosEmAtendimento,
+          icon: <HealthAndSafetyIcon />,
+          color: "info" as const,
+        },
+        {
+          label: "Em espera",
+          value: metricas.chamadosEmEspera,
+          icon: <HourglassTopIcon />,
+          color: "warning" as const,
+        },
+      ]
+    : [];
+
+  const chamadosPrioridade = metricas
+    ? [
+        {
+          prioridade: "Crítica",
+          total: metricas.graficoMetricas.quantidadeChamadosCritica,
+          cor: CORES_PRIORIDADE.CRITICA,
+        },
+        {
+          prioridade: "Alta",
+          total: metricas.graficoMetricas.quantidadeChamadosAlta,
+          cor: CORES_PRIORIDADE.ALTA,
+        },
+        {
+          prioridade: "Média",
+          total: metricas.graficoMetricas.quantidadeChamadosMedia,
+          cor: CORES_PRIORIDADE.MEDIA,
+        },
+        {
+          prioridade: "Baixa",
+          total: metricas.graficoMetricas.quantidadeChamadosBaixa,
+          cor: CORES_PRIORIDADE.BAIXA,
+        },
+      ]
+    : [];
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ padding: 3 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -135,7 +192,7 @@ export default function AdmDashboard() {
         actions={
           <Chip
             icon={<EventNoteIcon />}
-            label="Hoje, 18/05/2026"
+            label={`Hoje, ${hoje}`}
             color="primary"
             variant="outlined"
           />
@@ -144,15 +201,7 @@ export default function AdmDashboard() {
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
         {cards.map((c) => (
-          <Grid
-            key={c.label}
-            size={{
-              xs: 12,
-              sm: 6,
-              md: 4,
-              lg: 3,
-            }}
-          >
+          <Grid key={c.label} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
             <StatCardAdmin {...c} />
           </Grid>
         ))}
@@ -180,7 +229,7 @@ export default function AdmDashboard() {
 
               <Box sx={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={ATENDIMENTOS_SEMANA}>
+                  <LineChart data={metricas?.atendimentosPorDia ?? []}>
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
                     <XAxis
                       dataKey="dia"
@@ -218,7 +267,7 @@ export default function AdmDashboard() {
 
               <Box sx={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={CHAMADOS_PRIORIDADE}>
+                  <BarChart data={chamadosPrioridade}>
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
                     <XAxis
                       dataKey="prioridade"
@@ -234,7 +283,7 @@ export default function AdmDashboard() {
                     />
                     <Legend />
                     <Bar dataKey="total" radius={[6, 6, 0, 0]}>
-                      {CHAMADOS_PRIORIDADE.map((d) => (
+                      {chamadosPrioridade.map((d) => (
                         <Cell key={d.prioridade} fill={d.cor} />
                       ))}
                     </Bar>
