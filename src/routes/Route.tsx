@@ -40,7 +40,7 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: (
-          <ProtectedRoute roles={["medico"]}>
+          <ProtectedRoute roles={["MEDICO"]}>
             <Dashboard />
           </ProtectedRoute>
         ),
@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
       {
         path: "/fila",
         element: (
-          <ProtectedRoute roles={["medico"]}>
+          <ProtectedRoute roles={["MEDICO"]}>
             <FilaAtendimento />
           </ProtectedRoute>
         ),
@@ -58,7 +58,7 @@ export const router = createBrowserRouter([
       {
         path: "/pacientes",
         element: (
-          <ProtectedRoute roles={["medico"]}>
+          <ProtectedRoute roles={["MEDICO"]}>
             <Paciente />
           </ProtectedRoute>
         ),
@@ -67,7 +67,7 @@ export const router = createBrowserRouter([
       {
         path: "/historico",
         element: (
-          <ProtectedRoute roles={["medico"]}>
+          <ProtectedRoute roles={["MEDICO"]}>
             <HistoricoAtendimento />
           </ProtectedRoute>
         ),
@@ -76,7 +76,7 @@ export const router = createBrowserRouter([
       {
         path: "/chamados/:id",
         element: (
-          <ProtectedRoute roles={["medico"]}>
+          <ProtectedRoute roles={["MEDICO"]}>
             <DetalheChamado />
           </ProtectedRoute>
         ),
@@ -85,7 +85,7 @@ export const router = createBrowserRouter([
       {
         path: "/busca",
         element: (
-          <ProtectedRoute roles={["medico"]}>
+          <ProtectedRoute roles={["MEDICO"]}>
             <Busca />
           </ProtectedRoute>
         ),
@@ -98,7 +98,7 @@ export const router = createBrowserRouter([
       {
         path: "/recepcao",
         element: (
-          <ProtectedRoute roles={["recepcao"]}>
+          <ProtectedRoute roles={["RECEPCAO"]}>
             <DashboardRecepcao />
           </ProtectedRoute>
         ),
@@ -107,7 +107,7 @@ export const router = createBrowserRouter([
       {
         path: "/recepcao/checkin/:id?",
         element: (
-          <ProtectedRoute roles={["recepcao"]}>
+          <ProtectedRoute roles={["RECEPCAO"]}>
             <Checkin />
           </ProtectedRoute>
         ),
@@ -116,7 +116,7 @@ export const router = createBrowserRouter([
       {
         path: "/recepcao/fila",
         element: (
-          <ProtectedRoute roles={["recepcao"]}>
+          <ProtectedRoute roles={["RECEPCAO"]}>
             <RecepcaoFila />
           </ProtectedRoute>
         ),
@@ -125,7 +125,7 @@ export const router = createBrowserRouter([
       {
         path: "/recepcao/busca",
         element: (
-          <ProtectedRoute roles={["recepcao"]}>
+          <ProtectedRoute roles={["RECEPCAO"]}>
             <BuscaPaciente />
           </ProtectedRoute>
         ),
@@ -134,7 +134,7 @@ export const router = createBrowserRouter([
       {
         path: "/recepcao/encaminhamento",
         element: (
-          <ProtectedRoute roles={["recepcao"]}>
+          <ProtectedRoute roles={["RECEPCAO"]}>
             <Encaminhamento />
           </ProtectedRoute>
         ),
@@ -143,7 +143,7 @@ export const router = createBrowserRouter([
       {
         path: "/recepcao/encaminhamento/:id",
         element: (
-          <ProtectedRoute roles={["recepcao"]}>
+          <ProtectedRoute roles={["RECEPCAO"]}>
             <Encaminhamento />
           </ProtectedRoute>
         ),
@@ -156,7 +156,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <AdmDashboard />
           </ProtectedRoute>
         ),
@@ -164,7 +164,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm/usuarios",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Usuarios />
           </ProtectedRoute>
         ),
@@ -172,7 +172,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm/hospitais",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Hospitais />
           </ProtectedRoute>
         ),
@@ -180,7 +180,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm/especialidades",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Especialidades />
           </ProtectedRoute>
         ),
@@ -188,7 +188,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm/sintomas",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Sintomas />
           </ProtectedRoute>
         ),
@@ -196,7 +196,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm/eventos",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Eventos />
           </ProtectedRoute>
         ),
@@ -204,7 +204,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm/logs",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Logs />
           </ProtectedRoute>
         ),
@@ -212,7 +212,7 @@ export const router = createBrowserRouter([
       {
         path: "/adm/configuracoes",
         element: (
-          <ProtectedRoute roles={["adm"]}>
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Configuracoes />
           </ProtectedRoute>
         ),

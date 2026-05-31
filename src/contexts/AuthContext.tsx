@@ -1,9 +1,30 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { api } from "../service/api/api";
 
-export type Role = "medico" | "recepcao" | "adm";
+export type Role = "ADMINISTRADOR" | "MEDICO" | "RECEPCAO";
+
+export interface Usuario {
+  nome: string;
+  email: string;
+  role: Role;
+}
+
+interface AuthContextData {
+  usuario: Usuario | null;
+  user: Usuario | null;
+  isLoading: boolean;
+  login: (email: string, senha: string) => Promise<Usuario>;
+  logout: () => void;
+  isAuthenticated: boolean;
+}
 
 export interface AuthUser {
   email: string;
@@ -23,7 +44,7 @@ export const MOCK_USERS: MockCredential[] = [
     senha: "medico123",
     nome: "Dr. Rafael Souza",
     cargo: "Clínico Geral",
-    role: "medico",
+    role: "MEDICO",
     iniciais: "DR",
   },
   {
@@ -31,7 +52,7 @@ export const MOCK_USERS: MockCredential[] = [
     senha: "recepcao123",
     nome: "Ana Recepção",
     cargo: "Recepcionista",
-    role: "recepcao",
+    role: "RECEPCAO",
     iniciais: "AR",
   },
   {
@@ -39,52 +60,62 @@ export const MOCK_USERS: MockCredential[] = [
     senha: "adm123",
     nome: "Carlos Administrador",
     cargo: "Administrador",
-    role: "adm",
+    role: "ADMINISTRADOR",
     iniciais: "CA",
   },
 ];
 
-interface AuthContextValue {
-  user: AuthUser | null;
-  login: (email: string, senha: string) => { ok: boolean; error?: string };
-  logout: () => void;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-
-const STORAGE_KEY = "medfacil.auth.user";
+const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw));
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
+    const token = localStorage.getItem("token");
+    const usuarioSalvo = localStorage.getItem("usuario");
+
+    if (token && usuarioSalvo) {
+      setUsuario(JSON.parse(usuarioSalvo));
     }
+
+    setIsLoading(false);
   }, []);
 
-  const login = (email: string, senha: string) => {
-    const found = MOCK_USERS.find(
-      (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.senha === senha,
-    );
-    if (!found) return { ok: false, error: "E-mail ou senha inválidos." };
-    const { senha: _s, ...safe } = found;
-    setUser(safe);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
-    return { ok: true };
-  };
+  async function login(email: string, senha: string): Promise<Usuario> {
+    const response = await api.post("/auth/login", { email, senha });
+    const { token, nome, role } = response.data;
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
-  };
+    // role vem da API como "MEDICO", "RECEPCAO", "ADMINISTRADOR" — mantém assim
+    const usuarioLogado: Usuario = { nome, email, role: role as Role };
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+    localStorage.setItem("token", token);
+    localStorage.setItem("usuario", JSON.stringify(usuarioLogado));
+    setUsuario(usuarioLogado);
+
+    return usuarioLogado;
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    setUsuario(null);
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        usuario,
+        user: usuario,
+        isLoading,
+        login,
+        logout,
+        isAuthenticated: !!usuario,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

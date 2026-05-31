@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -11,60 +10,55 @@ import {
   Alert,
   InputAdornment,
   IconButton,
-  Divider,
-  Chip,
 } from "@mui/material";
-
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
+import { useAuth } from "../../contexts/AuthContext";
+import type { AxiosError } from "axios";
 
-import { MOCK_USERS, useAuth, type Role } from "../../contexts/AuthContext";
-
-const HOME_BY_ROLE: Record<Role, string> = {
-  medico: "/",
-  recepcao: "/recepcao",
-  adm: "/adm",
+const HOME_BY_ROLE: Record<string, string> = {
+  MEDICO: "/",
+  RECEPCAO: "/recepcao",
+  ADMINISTRADOR: "/adm",
 };
 
 export default function Login() {
-  const { user, login } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
 
-  if (user) {
-    return <Navigate to={HOME_BY_ROLE[user.role]} replace />;
-  }
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     setErro(null);
+    setCarregando(true);
 
-    const res = login(email, senha);
+    try {
+      // login() retorna o usuário já atualizado — não depende do estado
+      const usuarioLogado = await login(email, senha);
 
-    if (!res.ok) {
-      setErro(res.error ?? "Erro ao entrar.");
-      return;
+      const roleKey = usuarioLogado.role;
+      navigate(HOME_BY_ROLE[roleKey] ?? "/");
+    } catch (error) {
+      const axiosError = error as AxiosError;
+
+      if (axiosError.response?.status === 401) {
+        setErro("Email ou senha incorretos.");
+      } else if (axiosError.response?.status === 403) {
+        setErro("Usuário desativado. Entre em contato com o administrador.");
+      } else {
+        setErro("Erro ao conectar com o servidor. Tente novamente.");
+      }
+    } finally {
+      setCarregando(false);
     }
-
-    const u = MOCK_USERS.find(
-      (m) => m.email.toLowerCase() === email.trim().toLowerCase(),
-    )!;
-
-    navigate(HOME_BY_ROLE[u.role], { replace: true });
-  };
-
-  const preencher = (mockEmail: string, mockSenha: string) => {
-    setEmail(mockEmail);
-    setSenha(mockSenha);
-    setErro(null);
   };
 
   return (
@@ -79,12 +73,7 @@ export default function Login() {
       }}
     >
       <Card
-        sx={{
-          width: "100%",
-          maxWidth: 440,
-          borderRadius: 3,
-          boxShadow: 6,
-        }}
+        sx={{ width: "100%", maxWidth: 440, borderRadius: 3, boxShadow: 6 }}
       >
         <CardContent sx={{ p: 4 }}>
           <Box
@@ -96,25 +85,12 @@ export default function Login() {
               mb: 3,
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <MonitorHeartIcon
-                sx={{
-                  color: "primary.main",
-                  fontSize: 32,
-                }}
-              />
-
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <MonitorHeartIcon sx={{ color: "primary.main", fontSize: 32 }} />
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
                 Med+Fácil
               </Typography>
             </Box>
-
             <Typography variant="body2" color="text.secondary">
               Acesse sua conta para continuar
             </Typography>
@@ -127,13 +103,7 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-              }}
-            >
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <TextField
                 label="E-mail"
                 type="email"
@@ -151,7 +121,6 @@ export default function Login() {
                   },
                 }}
               />
-
               <TextField
                 label="Senha"
                 type={mostrarSenha ? "text" : "password"}
@@ -166,7 +135,6 @@ export default function Login() {
                         <LockIcon fontSize="small" />
                       </InputAdornment>
                     ),
-
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
@@ -185,79 +153,17 @@ export default function Login() {
                   },
                 }}
               />
-
               <Button
                 type="submit"
                 variant="contained"
-                size="large"
                 fullWidth
-                sx={{
-                  py: 1.2,
-                  fontWeight: 600,
-                }}
+                size="large"
+                disabled={carregando}
               >
-                Entrar
+                {carregando ? "Entrando..." : "Entrar"}
               </Button>
             </Box>
           </form>
-
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="caption" color="text.secondary">
-              Acessos de demonstração
-            </Typography>
-          </Divider>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 1,
-            }}
-          >
-            {MOCK_USERS.map((u) => (
-              <Box
-                key={u.email}
-                onClick={() => preencher(u.email, u.senha)}
-                sx={{
-                  p: 1.5,
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: 2,
-                  cursor: "pointer",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-
-                  "&:hover": {
-                    borderColor: "primary.main",
-                    bgcolor: "action.hover",
-                  },
-                }}
-              >
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    {u.cargo}
-                  </Typography>
-
-                  <Typography variant="caption" color="text.secondary">
-                    {u.email} / {u.senha}
-                  </Typography>
-                </Box>
-
-                <Chip
-                  size="small"
-                  label={u.role.toUpperCase()}
-                  color={
-                    u.role === "medico"
-                      ? "primary"
-                      : u.role === "recepcao"
-                        ? "success"
-                        : "warning"
-                  }
-                />
-              </Box>
-            ))}
-          </Box>
         </CardContent>
       </Card>
     </Box>

@@ -32,88 +32,37 @@ type NavItem = {
 };
 
 const navByRole: Record<Role, NavItem[]> = {
-  medico: [
-    {
-      to: "/",
-      icon: <DashboardIcon />,
-      label: "Dashboard",
-      exact: true,
-    },
-    {
-      to: "/fila",
-      icon: <ListAltIcon />,
-      label: "Fila de Atendimento",
-    },
-    {
-      to: "/pacientes",
-      icon: <PeopleIcon />,
-      label: "Pacientes",
-    },
-    {
-      to: "/historico",
-      icon: <HistoryIcon />,
-      label: "Histórico",
-    },
+  MEDICO: [
+    { to: "/",          icon: <DashboardIcon />, label: "Dashboard",          exact: true },
+    { to: "/fila",      icon: <ListAltIcon />,   label: "Fila de Atendimento" },
+    { to: "/pacientes", icon: <PeopleIcon />,    label: "Pacientes"           },
+    { to: "/historico", icon: <HistoryIcon />,   label: "Histórico"           },
   ],
 
-  recepcao: [
-    {
-      to: "/recepcao",
-      icon: <DashboardIcon />,
-      label: "Dashboard",
-      exact: true,
-    },
-    {
-      to: "/recepcao/checkin",
-      icon: <QrCodeScannerIcon />,
-      label: "Check-in",
-    },
-    {
-      to: "/recepcao/fila",
-      icon: <ListAltIcon />,
-      label: "Fila operacional",
-    },
-    {
-      to: "/recepcao/busca",
-      icon: <SearchIcon />,
-      label: "Busca de paciente",
-    },
-    {
-      to: "/recepcao/encaminhamento",
-      icon: <CallSplitIcon />,
-      label: "Encaminhamento",
-    },
+  RECEPCAO: [
+    { to: "/recepcao",                icon: <DashboardIcon />,    label: "Dashboard",        exact: true },
+    { to: "/recepcao/checkin",        icon: <QrCodeScannerIcon />,label: "Check-in"                      },
+    { to: "/recepcao/fila",           icon: <ListAltIcon />,      label: "Fila operacional"              },
+    { to: "/recepcao/busca",          icon: <SearchIcon />,       label: "Busca de paciente"             },
+    { to: "/recepcao/encaminhamento", icon: <CallSplitIcon />,    label: "Encaminhamento"                },
   ],
 
-  adm: [
-    {
-      to: "/adm",
-      icon: <AdminPanelSettingsIcon />,
-      label: "Painel ADM",
-      exact: true, // FIX: sem isso, /adm ficava ativo em TODAS as rotas /adm/*
-    },
-    { to: "/adm/usuarios", icon: <PeopleIcon />, label: "Usuários" },
-    { to: "/adm/hospitais", icon: <LocalHospitalIcon />, label: "Hospitais" },
-    {
-      to: "/adm/especialidades",
-      icon: <MedicalServicesIcon />,
-      label: "Especialidades",
-    },
-    { to: "/adm/sintomas", icon: <HealingIcon />, label: "Sintomas" },
-    { to: "/adm/eventos", icon: <EventNoteIcon />, label: "Eventos Clínicos" },
-    { to: "/adm/logs", icon: <ReceiptLongIcon />, label: "Logs / Auditoria" },
-    {
-      to: "/adm/configuracoes",
-      icon: <SettingsIcon />,
-      label: "Configurações",
-    },
+  ADMINISTRADOR: [
+    { to: "/adm",                icon: <AdminPanelSettingsIcon />, label: "Painel ADM",        exact: true },
+    { to: "/adm/usuarios",       icon: <PeopleIcon />,            label: "Usuários"                       },
+    { to: "/adm/hospitais",      icon: <LocalHospitalIcon />,     label: "Hospitais"                      },
+    { to: "/adm/especialidades", icon: <MedicalServicesIcon />,   label: "Especialidades"                 },
+    { to: "/adm/sintomas",       icon: <HealingIcon />,           label: "Sintomas"                       },
+    { to: "/adm/eventos",        icon: <EventNoteIcon />,         label: "Eventos Clínicos"               },
+    { to: "/adm/logs",           icon: <ReceiptLongIcon />,       label: "Logs / Auditoria"               },
+    { to: "/adm/configuracoes",  icon: <SettingsIcon />,          label: "Configurações"                  },
   ],
 };
 
 export const NavList = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const navItems = user ? navByRole[user.role] : [];
+  const navItems = user ? navByRole[user.role] ?? [] : [];
 
   return (
     <List sx={{ px: 1.5, py: 2 }}>
