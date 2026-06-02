@@ -72,11 +72,11 @@ const SEXO_LABEL: Record<string, string> = {
 
 // ── Dados extras do médico ──────────────────────────────────────────────────
 interface MedicoExtra {
-  medicoId?: number; // preenchido na edição
+  medicoId?: number;
   crm: string;
   especialidadeId: number | "";
   sexo: "MASCULINO" | "FEMININO" | "OUTRO" | "";
-  dataNascimento: string;
+  dataNascimento: string; // "YYYY-MM-DD" — usado no input type="date" e enviado ao backend
 }
 
 const emptyMedicoExtra = (): MedicoExtra => ({
@@ -86,14 +86,19 @@ const emptyMedicoExtra = (): MedicoExtra => ({
   dataNascimento: "",
 });
 
-const medicoResponseToExtra = (m: MedicoResponseDTO, especialidades: { id: number; nome: string; descricao: string }[]): MedicoExtra => {
+const medicoResponseToExtra = (
+  m: MedicoResponseDTO,
+  especialidades: { id: number; nome: string; descricao: string }[],
+): MedicoExtra => {
   const esp = especialidades.find((e) => e.nome === m.especialidade?.nome);
   return {
     medicoId: m.id,
     crm: m.crm ?? "",
     especialidadeId: esp?.id ?? "",
     sexo: m.sexo ?? "",
-    dataNascimento: m.dataNascimento ?? "",
+    // O backend retorna apenas `idade` (número), não a data original.
+    // Deixamos vazio para o usuário preencher novamente caso queira editar.
+    dataNascimento: "",
   };
 };
 
@@ -139,7 +144,9 @@ const fromResponse = (u: UsuarioResponseDTO): UsuarioForm => ({
 const PAGE_SIZE = 6;
 
 const maskCpf = (v: string) =>
-  v.replace(/\D/g, "").slice(0, 11)
+  v
+    .replace(/\D/g, "")
+    .slice(0, 11)
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
@@ -148,12 +155,6 @@ const maskTelefone = (v: string) => {
   const d = v.replace(/\D/g, "").slice(0, 11);
   if (d.length <= 10) return d.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
   return d.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3");
-};
-
-const formatDate = (iso: string) => {
-  if (!iso) return "—";
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
 };
 
 // ── Componente ──────────────────────────────────────────────────────────────
@@ -171,7 +172,8 @@ export const Usuarios = () => {
   } = useUsuarios();
 
   const { hospitais } = useHospitais();
-  const { cadastrarMedico, buscarMedicoPorUsuarioId, atualizarMedico } = useMedico();
+  const { cadastrarMedico, buscarMedicoPorUsuarioId, atualizarMedico } =
+    useMedico();
   const { especialidades } = useEspecialidade();
 
   useEffect(() => {
@@ -206,9 +208,10 @@ export const Usuarios = () => {
   }>(null);
   const [editing, setEditing] = useState<UsuarioForm>(emptyForm());
 
-  // Estado do modal de visualização: usuário + dados do médico separados
   const [viewing, setViewing] = useState<UsuarioResponseDTO | null>(null);
-  const [viewingMedico, setViewingMedico] = useState<MedicoResponseDTO | null>(null);
+  const [viewingMedico, setViewingMedico] = useState<MedicoResponseDTO | null>(
+    null,
+  );
 
   // ── Abrir criação ──
   const openCreate = () => {
@@ -240,7 +243,7 @@ export const Usuarios = () => {
     }
   };
 
-  // ── Abrir visualização: carrega usuário + dados do médico se for MEDICO ──
+  // ── Abrir visualização ──
   const openView = async (u: UsuarioResponseDTO) => {
     setViewing(null);
     setViewingMedico(null);
@@ -281,13 +284,15 @@ export const Usuarios = () => {
             hospitalId: Number(hospitalId),
           });
 
-          // Atualiza dados do médico se aplicável
           if (rest.tipoUsuario === "MEDICO" && medicoExtra.medicoId) {
             const especialidadeSelecionada = especialidades.find(
-              (e) => e.id === Number(medicoExtra.especialidadeId)
+              (e) => e.id === Number(medicoExtra.especialidadeId),
             );
             if (!especialidadeSelecionada) {
-              showToast("Especialidade não encontrada. Tente novamente.", "error");
+              showToast(
+                "Especialidade não encontrada. Tente novamente.",
+                "error",
+              );
               return;
             }
             await atualizarMedico(medicoExtra.medicoId, {
@@ -297,7 +302,7 @@ export const Usuarios = () => {
                 descricao: especialidadeSelecionada.descricao,
               },
               sexo: medicoExtra.sexo as "MASCULINO" | "FEMININO" | "OUTRO",
-              dataNascimento: medicoExtra.dataNascimento,
+              dataNascimento: medicoExtra.dataNascimento, // string "YYYY-MM-DD" → LocalDate no Java
             });
           }
 
@@ -312,10 +317,13 @@ export const Usuarios = () => {
 
           if (rest.tipoUsuario === "MEDICO") {
             const especialidadeSelecionada = especialidades.find(
-              (e) => e.id === Number(medicoExtra.especialidadeId)
+              (e) => e.id === Number(medicoExtra.especialidadeId),
             );
             if (!especialidadeSelecionada) {
-              showToast("Especialidade não encontrada. Tente novamente.", "error");
+              showToast(
+                "Especialidade não encontrada. Tente novamente.",
+                "error",
+              );
               return;
             }
             await cadastrarMedico({
@@ -325,7 +333,7 @@ export const Usuarios = () => {
                 descricao: especialidadeSelecionada.descricao,
               },
               sexo: medicoExtra.sexo as "MASCULINO" | "FEMININO" | "OUTRO",
-              dataNascimento: medicoExtra.dataNascimento,
+              dataNascimento: medicoExtra.dataNascimento, // string "YYYY-MM-DD" → LocalDate no Java
               usuarioId: novoUsuario.id,
             });
           }
@@ -351,7 +359,10 @@ export const Usuarios = () => {
   const isMedico = editing.tipoUsuario === "MEDICO";
 
   const setMedicoExtra = (patch: Partial<MedicoExtra>) =>
-    setEditing((prev) => ({ ...prev, medicoExtra: { ...prev.medicoExtra, ...patch } }));
+    setEditing((prev) => ({
+      ...prev,
+      medicoExtra: { ...prev.medicoExtra, ...patch },
+    }));
 
   return (
     <Box>
@@ -359,7 +370,11 @@ export const Usuarios = () => {
         title="Usuários"
         subtitle="Gerencie médicos, recepcionistas e administradores"
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={openCreate}
+          >
             Novo usuário
           </Button>
         }
@@ -374,11 +389,16 @@ export const Usuarios = () => {
               size="small"
               placeholder="Buscar por nome ou e-mail"
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
               slotProps={{
                 input: {
                   startAdornment: (
-                    <InputAdornment position="start"><SearchIcon /></InputAdornment>
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
                   ),
                 },
               }}
@@ -388,7 +408,10 @@ export const Usuarios = () => {
               <Select
                 label="Tipo"
                 value={filtroTipo}
-                onChange={(e) => { setFiltroTipo(e.target.value as any); setPage(1); }}
+                onChange={(e) => {
+                  setFiltroTipo(e.target.value as any);
+                  setPage(1);
+                }}
               >
                 <MenuItem value="TODOS">Todos</MenuItem>
                 <MenuItem value="ADMINISTRADOR">Administrador</MenuItem>
@@ -425,61 +448,106 @@ export const Usuarios = () => {
               {!loading && pageRows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                    <Typography color="text.secondary">Nenhum usuário encontrado</Typography>
+                    <Typography color="text.secondary">
+                      Nenhum usuário encontrado
+                    </Typography>
                   </TableCell>
                 </TableRow>
               )}
-              {!loading && pageRows.map((u) => (
-                <TableRow key={u.id} hover>
-                  <TableCell>
-                    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                      <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: 14 }}>
-                        {u.nome.split(" ").map((p) => p[0]).slice(0, 2).join("")}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{u.nome}</Typography>
-                        <Typography variant="caption" color="text.secondary">{u.cpf}</Typography>
-                      </Box>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{u.email}</Typography>
-                    <Typography variant="caption" color="text.secondary">{u.telefone}</Typography>
-                  </TableCell>
-                  <TableCell>{hospitalNome(u.hospital?.id)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={u.tipoUsuario}
-                      color={TIPO_COR[u.tipoUsuario as Exclude<TipoUsuarioResponseAPI, "PACIENTE">] ?? "default"}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={u.ativo ? "Ativo" : "Inativo"}
-                      color={u.ativo ? "success" : "default"}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Visualizar">
-                      <IconButton onClick={() => openView(u)}><VisibilityIcon fontSize="small" /></IconButton>
-                    </Tooltip>
-                    <Tooltip title="Editar">
-                      <IconButton onClick={() => openEdit(u)}><EditIcon fontSize="small" /></IconButton>
-                    </Tooltip>
-                    <Tooltip title="Excluir">
-                      <IconButton color="error" onClick={() => requestDelete(u)}><DeleteIcon fontSize="small" /></IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {!loading &&
+                pageRows.map((u) => (
+                  <TableRow key={u.id} hover>
+                    <TableCell>
+                      <Stack
+                        direction="row"
+                        spacing={1.5}
+                        sx={{ alignItems: "center" }}
+                      >
+                        <Avatar
+                          sx={{
+                            bgcolor: "primary.main",
+                            width: 36,
+                            height: 36,
+                            fontSize: 14,
+                          }}
+                        >
+                          {u.nome
+                            .split(" ")
+                            .map((p) => p[0])
+                            .slice(0, 2)
+                            .join("")}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {u.nome}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {u.cpf}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{u.email}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {u.telefone}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{hospitalNome(u.hospital?.id)}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={u.tipoUsuario}
+                        color={
+                          TIPO_COR[
+                            u.tipoUsuario as Exclude<
+                              TipoUsuarioResponseAPI,
+                              "PACIENTE"
+                            >
+                          ] ?? "default"
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={u.ativo ? "Ativo" : "Inativo"}
+                        color={u.ativo ? "success" : "default"}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Visualizar">
+                        <IconButton onClick={() => openView(u)}>
+                          <VisibilityIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Editar">
+                        <IconButton onClick={() => openEdit(u)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Excluir">
+                        <IconButton
+                          color="error"
+                          onClick={() => requestDelete(u)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
         <Stack sx={{ justifyContent: "flex-end", p: 2 }} direction="row">
-          <Pagination count={pages} page={page} onChange={(_, p) => setPage(p)} color="primary" />
+          <Pagination
+            count={pages}
+            page={page}
+            onChange={(_, p) => setPage(p)}
+            color="primary"
+          />
         </Stack>
       </Card>
 
@@ -503,7 +571,9 @@ export const Usuarios = () => {
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
             {editing.id ? "Editar usuário" : "Novo usuário"}
           </Typography>
-          <IconButton onClick={() => setFormOpen(false)}><CloseIcon /></IconButton>
+          <IconButton onClick={() => setFormOpen(false)}>
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
 
         <DialogContent sx={{ pt: 3, display: "grid", gap: 2 }}>
@@ -519,13 +589,17 @@ export const Usuarios = () => {
               label="E-mail"
               fullWidth
               value={editing.email}
-              onChange={(e) => setEditing({ ...editing, email: e.target.value })}
+              onChange={(e) =>
+                setEditing({ ...editing, email: e.target.value })
+              }
             />
             <TextField
               label="CPF"
               fullWidth
               value={editing.cpf}
-              onChange={(e) => setEditing({ ...editing, cpf: maskCpf(e.target.value) })}
+              onChange={(e) =>
+                setEditing({ ...editing, cpf: maskCpf(e.target.value) })
+              }
             />
           </Stack>
 
@@ -535,13 +609,20 @@ export const Usuarios = () => {
               type="password"
               fullWidth
               value={editing.senha}
-              onChange={(e) => setEditing({ ...editing, senha: e.target.value })}
+              onChange={(e) =>
+                setEditing({ ...editing, senha: e.target.value })
+              }
             />
             <TextField
               label="Telefone"
               fullWidth
               value={editing.telefone}
-              onChange={(e) => setEditing({ ...editing, telefone: maskTelefone(e.target.value) })}
+              onChange={(e) =>
+                setEditing({
+                  ...editing,
+                  telefone: maskTelefone(e.target.value),
+                })
+              }
             />
           </Stack>
 
@@ -551,10 +632,14 @@ export const Usuarios = () => {
               <Select
                 label="Hospital"
                 value={editing.hospitalId}
-                onChange={(e) => setEditing({ ...editing, hospitalId: Number(e.target.value) })}
+                onChange={(e) =>
+                  setEditing({ ...editing, hospitalId: Number(e.target.value) })
+                }
               >
                 {hospitais?.map((h: any) => (
-                  <MenuItem key={h.id} value={h.id}>{h.nome}</MenuItem>
+                  <MenuItem key={h.id} value={h.id}>
+                    {h.nome}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -568,7 +653,10 @@ export const Usuarios = () => {
                   setEditing({
                     ...editing,
                     tipoUsuario: tipo,
-                    medicoExtra: tipo === "MEDICO" ? editing.medicoExtra : emptyMedicoExtra(),
+                    medicoExtra:
+                      tipo === "MEDICO"
+                        ? editing.medicoExtra
+                        : emptyMedicoExtra(),
                   });
                 }}
               >
@@ -579,7 +667,7 @@ export const Usuarios = () => {
             </FormControl>
           </Stack>
 
-          {/* ── Seção extra: dados do médico (criação E edição) ── */}
+          {/* ── Seção extra: dados do médico ── */}
           <Collapse in={isMedico} unmountOnExit>
             <Box
               sx={{
@@ -590,9 +678,17 @@ export const Usuarios = () => {
                 bgcolor: "info.50",
               }}
             >
-              <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{ alignItems: "center", mb: 2 }}
+              >
                 <LocalHospitalIcon color="info" fontSize="small" />
-                <Typography variant="subtitle2" color="info.dark" sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant="subtitle2"
+                  color="info.dark"
+                  sx={{ fontWeight: 700 }}
+                >
                   Dados do médico
                 </Typography>
               </Stack>
@@ -619,7 +715,12 @@ export const Usuarios = () => {
                         label="Sexo"
                         value={editing.medicoExtra.sexo}
                         onChange={(e) =>
-                          setMedicoExtra({ sexo: e.target.value as "MASCULINO" | "FEMININO" | "OUTRO" })
+                          setMedicoExtra({
+                            sexo: e.target.value as
+                              | "MASCULINO"
+                              | "FEMININO"
+                              | "OUTRO",
+                          })
                         }
                       >
                         <MenuItem value="MASCULINO">Masculino</MenuItem>
@@ -634,7 +735,9 @@ export const Usuarios = () => {
                     type="date"
                     fullWidth
                     value={editing.medicoExtra.dataNascimento}
-                    onChange={(e) => setMedicoExtra({ dataNascimento: e.target.value })}
+                    onChange={(e) =>
+                      setMedicoExtra({ dataNascimento: e.target.value })
+                    }
                     slotProps={{ inputLabel: { shrink: true } }}
                   />
 
@@ -643,10 +746,16 @@ export const Usuarios = () => {
                     <Select
                       label="Especialidade"
                       value={editing.medicoExtra.especialidadeId}
-                      onChange={(e) => setMedicoExtra({ especialidadeId: Number(e.target.value) })}
+                      onChange={(e) =>
+                        setMedicoExtra({
+                          especialidadeId: Number(e.target.value),
+                        })
+                      }
                     >
                       {especialidades.map((esp) => (
-                        <MenuItem key={esp.id} value={esp.id}>{esp.nome}</MenuItem>
+                        <MenuItem key={esp.id} value={esp.id}>
+                          {esp.nome}
+                        </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -655,17 +764,32 @@ export const Usuarios = () => {
             </Box>
           </Collapse>
 
-          <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", pt: 1 }}>
+          <Stack
+            direction="row"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+              pt: 1,
+            }}
+          >
             <Typography variant="body2">Usuário ativo</Typography>
             <Switch
               checked={editing.ativo}
-              onChange={(e) => setEditing({ ...editing, ativo: e.target.checked })}
+              onChange={(e) =>
+                setEditing({ ...editing, ativo: e.target.checked })
+              }
             />
           </Stack>
         </DialogContent>
 
-        <DialogActions sx={{ p: 2, borderTop: "1px solid", borderColor: "divider" }}>
-          <Button onClick={() => setFormOpen(false)} variant="outlined" color="inherit">
+        <DialogActions
+          sx={{ p: 2, borderTop: "1px solid", borderColor: "divider" }}
+        >
+          <Button
+            onClick={() => setFormOpen(false)}
+            variant="outlined"
+            color="inherit"
+          >
             Cancelar
           </Button>
           <Button onClick={requestSave} variant="contained">
@@ -691,8 +815,12 @@ export const Usuarios = () => {
             borderColor: "divider",
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>Detalhes do usuário</Typography>
-          <IconButton onClick={() => setViewOpen(false)}><CloseIcon /></IconButton>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Detalhes do usuário
+          </Typography>
+          <IconButton onClick={() => setViewOpen(false)}>
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
 
         <DialogContent sx={{ pt: 3 }}>
@@ -702,22 +830,44 @@ export const Usuarios = () => {
             </Stack>
           ) : viewing ? (
             <>
-              {/* Cabeçalho com avatar */}
-              <Stack direction="row" spacing={2} sx={{ alignItems: "center", mb: 3 }}>
-                <Avatar sx={{ bgcolor: "primary.main", width: 56, height: 56, fontSize: 20 }}>
-                  {viewing.nome.split(" ").map((p) => p[0]).slice(0, 2).join("")}
+              <Stack
+                direction="row"
+                spacing={2}
+                sx={{ alignItems: "center", mb: 3 }}
+              >
+                <Avatar
+                  sx={{
+                    bgcolor: "primary.main",
+                    width: 56,
+                    height: 56,
+                    fontSize: 20,
+                  }}
+                >
+                  {viewing.nome
+                    .split(" ")
+                    .map((p) => p[0])
+                    .slice(0, 2)
+                    .join("")}
                 </Avatar>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>{viewing.nome}</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    {viewing.nome}
+                  </Typography>
                   <Chip
                     label={viewing.tipoUsuario}
                     size="small"
-                    color={TIPO_COR[viewing.tipoUsuario as Exclude<TipoUsuarioResponseAPI, "PACIENTE">] ?? "default"}
+                    color={
+                      TIPO_COR[
+                        viewing.tipoUsuario as Exclude<
+                          TipoUsuarioResponseAPI,
+                          "PACIENTE"
+                        >
+                      ] ?? "default"
+                    }
                   />
                 </Box>
               </Stack>
 
-              {/* Dados do usuário */}
               {(
                 [
                   ["E-mail", viewing.email],
@@ -730,19 +880,35 @@ export const Usuarios = () => {
                 <Stack
                   key={k}
                   direction="row"
-                  sx={{ justifyContent: "space-between", py: 1, borderBottom: "1px dashed", borderColor: "divider" }}
+                  sx={{
+                    justifyContent: "space-between",
+                    py: 1,
+                    borderBottom: "1px dashed",
+                    borderColor: "divider",
+                  }}
                 >
-                  <Typography variant="body2" color="text.secondary">{k}</Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>{v}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {k}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {v}
+                  </Typography>
                 </Stack>
               ))}
 
-              {/* Dados do médico (só exibe se for MEDICO) */}
               {viewing.tipoUsuario === "MEDICO" && (
                 <Box sx={{ mt: 2 }}>
-                  <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 1.5 }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: "center", mb: 1.5 }}
+                  >
                     <LocalHospitalIcon color="info" fontSize="small" />
-                    <Typography variant="subtitle2" color="info.dark" sx={{ fontWeight: 700 }}>
+                    <Typography
+                      variant="subtitle2"
+                      color="info.dark"
+                      sx={{ fontWeight: 700 }}
+                    >
                       Dados do médico
                     </Typography>
                   </Stack>
@@ -753,22 +919,38 @@ export const Usuarios = () => {
                     (
                       [
                         ["CRM", viewingMedico.crm ?? "—"],
-                        ["Especialidade", viewingMedico.especialidade?.nome ?? "—"],
+                        [
+                          "Especialidade",
+                          viewingMedico.especialidade?.nome ?? "—",
+                        ],
                         ["Sexo", SEXO_LABEL[viewingMedico.sexo] ?? "—"],
-                        ["Data de nascimento", formatDate(viewingMedico.dataNascimento)],
+                        ["Idade", String(viewingMedico.idade ?? "—")],
                       ] as [string, string][]
                     ).map(([k, v]) => (
                       <Stack
                         key={k}
                         direction="row"
-                        sx={{ justifyContent: "space-between", py: 1, borderBottom: "1px dashed", borderColor: "divider" }}
+                        sx={{
+                          justifyContent: "space-between",
+                          py: 1,
+                          borderBottom: "1px dashed",
+                          borderColor: "divider",
+                        }}
                       >
-                        <Typography variant="body2" color="text.secondary">{k}</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>{v}</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {k}
+                        </Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {v}
+                        </Typography>
                       </Stack>
                     ))
                   ) : (
-                    <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ py: 1 }}
+                    >
                       Dados do médico não encontrados.
                     </Typography>
                   )}
@@ -782,7 +964,9 @@ export const Usuarios = () => {
       {/* ── Modal: Confirmar ação ── */}
       <ConfirmActionModal
         open={!!confirm}
-        title={confirm?.tipo === "excluir" ? "Excluir usuário" : "Salvar alterações"}
+        title={
+          confirm?.tipo === "excluir" ? "Excluir usuário" : "Salvar alterações"
+        }
         message={
           confirm?.tipo === "excluir"
             ? `Deseja realmente excluir o usuário ${confirm.user.nome}? Esta ação não pode ser desfeita.`

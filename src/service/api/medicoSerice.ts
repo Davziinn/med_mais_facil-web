@@ -25,7 +25,7 @@ export interface MedicoResponseDTO {
   crm: string;
   especialidade: EspecialidadeDTO;
   sexo: "MASCULINO" | "FEMININO" | "OUTRO";
-  dataNascimento: string;
+  idade: number;
   usuarioId: number;
 }
 
