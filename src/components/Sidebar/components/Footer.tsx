@@ -43,7 +43,7 @@ export const Footer = () => {
           fontWeight: 700,
         }}
       >
-        {user?.iniciais ?? "?"}
+        {user?.nome.charAt(0) ?? "?"}
       </Avatar>
 
       <Box
@@ -60,7 +60,7 @@ export const Footer = () => {
           }}
           noWrap
         >
-          {user?.nome ?? "Visitante"}
+          {user?.role === "MEDICO" ? "Dr." : ""} {user?.nome ?? "Visitante"}
         </Typography>
 
         <Typography
@@ -69,7 +69,7 @@ export const Footer = () => {
             color: "rgba(238,242,247,0.5)",
           }}
         >
-          {user?.cargo ?? "—"}
+          {user?.role ?? "—"}
         </Typography>
       </Box>
 
