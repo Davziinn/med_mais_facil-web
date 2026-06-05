@@ -59,22 +59,22 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
   const { encerrarAtendimento } = useEncerrarAtendimento();
 
   useEffect(() => {
-    if (!detalheChamado) return;
+  if (!detalheChamado) return;
 
-    if (detalheChamado.statusChamado === "EM_ATENDIMENTO") {
-      setAtendimentoIniciado(true);
-      setAtendimentoConfirmado(true);
-      setPrescricaoFeita(true);
-    }
+  if (detalheChamado.statusChamado === "EM_ATENDIMENTO") {
+    setAtendimentoIniciado(true);
+    setAtendimentoConfirmado(true);
+    setPrescricaoFeita(true);
+  }
 
-    if (detalheChamado.statusChamado === "FINALIZADO") {
-      setAtendimentoEncerrado(true);
-    }
+  if (detalheChamado.statusChamado === "FINALIZADO") {
+    setAtendimentoEncerrado(true);
+  }
 
-    if (detalheChamado.id) {
-      setAtendimentoId(detalheChamado.id);
-    }
-  }, [detalheChamado]);
+  if (detalheChamado.atendimentoId) {
+    setAtendimentoId(detalheChamado.atendimentoId); 
+  }
+}, [detalheChamado]);
 
   const handleBotaoAtendimento = () => {
     if (atendimentoIniciado) {
@@ -174,8 +174,8 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
             {detalheChamado?.dataAbertura
               ? formatDateTime(detalheChamado.dataAbertura)
               : ""}
-            {" · "}
-            Hospital Kra Lho
+            {/* {" · "}
+            Hospital Kra Lho */}
           </Typography>
         </Box>
 

@@ -1,24 +1,66 @@
 import { Chip } from "@mui/material";
+import type { PrioridadeChamadoResponseAPI } from "../service/api/filaEsperaService";
 
-export type ChipPrioridadeCor = "vermelho" | "laranja" | "amarelo" | "verde";
+export type ChipPrioridadeCor =
+  | "vermelho"
+  | "laranja"
+  | "amarelo"
+  | "verde";
 
-const config: Record<
-  ChipPrioridadeCor,
-  { label: string; color: "error" | "warning" | "info" | "success" }
+type PrioridadeBadgeValue =
+  | ChipPrioridadeCor
+  | PrioridadeChamadoResponseAPI;
+
+const config = {
+  vermelho: {
+    label: "Emergência",
+    color: "error",
+  },
+  laranja: {
+    label: "Urgente",
+    color: "warning",
+  },
+  amarelo: {
+    label: "Moderado",
+    color: "info",
+  },
+  verde: {
+    label: "Baixa",
+    color: "success",
+  },
+} as const;
+
+const apiToColor: Record<
+  PrioridadeChamadoResponseAPI,
+  ChipPrioridadeCor
 > = {
-  vermelho: { label: "Emergência", color: "error" },
-  laranja: { label: "Urgente", color: "warning" },
-  amarelo: { label: "Moderado", color: "info" },
-  verde: { label: "Baixa", color: "success" },
+  CRITICA: "vermelho",
+  ALTA: "laranja",
+  MEDIA: "amarelo",
+  BAIXA: "verde",
 };
 
 export default function PrioridadeBadge({
   prioridade,
 }: {
-  prioridade: ChipPrioridadeCor | undefined | null;
+  prioridade: PrioridadeBadgeValue | null | undefined;
 }) {
-  if (!prioridade || !config[prioridade]) return null;
+  if (!prioridade) return null;
 
-  const c = config[prioridade];
-  return <Chip label={c.label} color={c.color} size="small" />;
+  const cor =
+    prioridade in apiToColor
+      ? apiToColor[prioridade as PrioridadeChamadoResponseAPI]
+      : (prioridade as ChipPrioridadeCor);
+
+  const c = config[cor];
+
+  if (!c) return null;
+
+  return (
+    <Chip
+      label={c.label}
+      color={c.color}
+      size="small"
+    />
+  );
 }

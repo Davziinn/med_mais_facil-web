@@ -6,6 +6,7 @@ export interface PacienteResponseDTO {
   cpf: string;
   idade: number;
   sexo: string;
+  convenio: string | null;
   condicoesPreexistentes: string[];
 }
 

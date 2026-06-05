@@ -326,12 +326,18 @@ export const Checkin = () => {
                   <Grid size={{ xs: 12, sm: 6 }}>
                     <Field label="CPF" value={detalheChamado.paciente.cpf} />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
+                  <Grid size={{ xs: 6, sm: 3 }}>
                     <Field
                       label="Tempo desde abertura"
                       value={formatTempo(
                         calcMinutos(detalheChamado.dataAbertura),
                       )}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 3 }}>
+                    <Field
+                      label="Convênio"
+                      value={detalheChamado.paciente.convenio || "Não informado"}
                     />
                   </Grid>
                   <Grid size={12}>

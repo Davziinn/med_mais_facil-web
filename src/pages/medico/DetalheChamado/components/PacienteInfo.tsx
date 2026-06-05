@@ -47,7 +47,7 @@ export const PacienteInfo = ({ id }: PacienteInfoProps) => {
             />
             <Field
               label="Convênio"
-              value={/*detalheChamado?.paciente.convenio ?? '---'*/ "---"}
+              value={detalheChamado?.paciente.convenio ?? "Não informado"}
             />
           </Stack>
 

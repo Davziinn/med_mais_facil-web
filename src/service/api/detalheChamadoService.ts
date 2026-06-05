@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { EventoClinicoResponseDTO } from "./eventoClinicoResponseDTO";
+import type { EventoClinicoResponseDTO } from "./eventoClinicoService";
 import type {
   PrioridadeChamadoResponseAPI,
   StatusChamadoResponseAPI,
@@ -23,7 +23,9 @@ export interface DetalheChamadoResponseDTO {
   queixa: string;
   sintomas: SintomaChamadoResponseDTO[];
   eventosClinicos: EventoClinicoResponseDTO[];
-  sinaisAlertas: SinaisAlertaResponseDTO[]
+  sinaisAlertas: SinaisAlertaResponseDTO[];
+  atendimentoId: number | null;
+
 }
 
 export const getDetalheChamado = async (

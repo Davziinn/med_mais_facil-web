@@ -159,7 +159,7 @@ export function PageShell({
 export const panelSx = {
   bgcolor: PANEL_BG,
   border: `1px solid ${PANEL_BORDER}`,
-  borderRadius: 3, // Bordas um pouco mais arredondadas para um look moderno
+  borderRadius: 3,
   color: TEXT,
-  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)", // Sombra leve para destacar no fundo cinza
+  boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)",
 };
