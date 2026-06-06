@@ -27,6 +27,7 @@ import { useIniciarAtendimento } from "../../../../hooks/useIniciarAtendimento";
 
 import { formatDateTime } from "../../../../utils/FormataTempo";
 import type { DetalheChamadoUI } from "../../../../mappers/detalheMapper";
+import { useAuth } from "../../../../contexts/AuthContext";
 
 interface HeaderDetalheProps {
   id: number;
@@ -57,6 +58,7 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
   const { detalheChamado, setDetalheChamado } = useDetalheChamado(id);
   const { iniciarAtendimento } = useIniciarAtendimento();
   const { encerrarAtendimento } = useEncerrarAtendimento();
+  const { usuario } = useAuth();
 
   useEffect(() => {
   if (!detalheChamado) return;
@@ -88,8 +90,10 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
   const confirmarInicioAtendimento = async () => {
     try {
       setLoadingInicio(true);
+      const medicoId = usuario?.medicoId;
+      if (!medicoId) return;
 
-      const resultado = await iniciarAtendimento(id, 1);
+      const resultado = await iniciarAtendimento(id, medicoId);
 
       if (resultado) {
         setAtendimentoId(resultado.id);

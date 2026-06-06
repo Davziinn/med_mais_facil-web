@@ -15,6 +15,8 @@ export interface Usuario {
   nome: string;
   email: string;
   role: Role;
+  medicoId: number | null; // ← adiciona
+
 }
 
 interface AuthContextData {
@@ -84,10 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, senha: string): Promise<Usuario> {
     const response = await api.post("/auth/login", { email, senha });
-    const { token, nome, role } = response.data;
+    const { token, nome, role, medicoId } = response.data;
 
     // role vem da API como "MEDICO", "RECEPCAO", "ADMINISTRADOR" — mantém assim
-    const usuarioLogado: Usuario = { nome, email, role: role as Role };
+    const usuarioLogado: Usuario = { nome, email, role: role as Role, medicoId: medicoId ?? null };
 
     localStorage.setItem("token", token);
     localStorage.setItem("usuario", JSON.stringify(usuarioLogado));
