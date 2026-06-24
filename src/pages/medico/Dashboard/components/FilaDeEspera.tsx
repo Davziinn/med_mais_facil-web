@@ -20,7 +20,7 @@ export const FilaDeEspera = () => {
   const { filaEspera } = useFilaEspera()
   
   return (
-    <Grid size={{ xs: 12, lg: 4 }}>
+    <Grid size={{ xs: 12, lg: 6 }}>
       <Card sx={{ height: "100%" }}>
         <Box
           sx={{

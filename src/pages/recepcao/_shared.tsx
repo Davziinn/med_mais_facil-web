@@ -1,6 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Box, Chip, Typography } from "@mui/material";
-import type { PrioridadeChamadoResponseAPI } from "../../service/api/filaEsperaService";
+import type {
+  PrioridadeChamadoResponseAPI,
+  StatusChamadoResponseAPI,
+} from "../../service/api/filaEsperaService";
 
 // --- NOVAS CONSTANTES PARA LIGHT MODE ---
 export const DARK_BG = "#f8fafc";
@@ -77,16 +80,43 @@ export function PrioridadeTag({ p }: { p: PrioridadeChamadoResponseAPI }) {
   );
 }
 
-export const PRESENCA_LABEL: Record<string, { label: string; color: string }> =
-  {
-    aguardando_checkin: { label: "Aguardando check-in", color: "#64748b" },
-    presente: { label: "Na fila", color: "#2563eb" },
-    ausente: { label: "Ausente", color: "#dc2626" },
-    encaminhado: { label: "Encaminhado", color: "#059669" },
-  };
+export const PRESENCA_LABEL: Record<
+  StatusChamadoResponseAPI,
+  { label: string; color: string }
+> = {
+  AGUARDANDO_CHECKIN: {
+    label: "Aguardando check-in",
+    color: "#64748b",
+  },
 
-export function PresencaTag({ s }: { s: string }) {
-  const c = PRESENCA_LABEL[s] || PRESENCA_LABEL.aguardando_checkin;
+  EM_ESPERA: {
+    label: "Em espera",
+    color: "#978e0a",
+  },
+
+  EM_ATENDIMENTO: {
+    label: "Em atendimento",
+    color: "#2563eb",
+  },
+
+  FINALIZADO: {
+    label: "Finalizado",
+    color: "#059669",
+  },
+
+  CANCELADO: {
+    label: "Cancelado",
+    color: "#dc2626",
+  },
+
+  AUSENTE: {
+    label: "Ausente",
+    color: "#991b1b",
+  },
+};
+
+export function PresencaTag({ s }: { s: StatusChamadoResponseAPI }) {
+  const c = PRESENCA_LABEL[s];
   return (
     <Chip
       size="small"

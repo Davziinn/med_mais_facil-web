@@ -2,9 +2,11 @@ import { AppBar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SIDEBAR_WIDTH } from "../Sidebar/AppSidebar";
 import { Search } from "./components/Search";
+import { useAuth } from "../../contexts/AuthContext";
 
 export const TopBar = () => {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
 
   const handleSearch = (termo: string) => {
     if (termo.trim()) {
@@ -24,7 +26,11 @@ export const TopBar = () => {
         ml: `${SIDEBAR_WIDTH}px`,
       }}
     >
-      <Search onSearch={handleSearch} />
+      {usuario?.role === "MEDICO" ? (
+        <Search onSearch={handleSearch} />
+      ) : (
+        <></> // componente futuro
+      )}
     </AppBar>
   );
 };

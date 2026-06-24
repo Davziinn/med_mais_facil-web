@@ -2,7 +2,7 @@ import { Box, Grid } from "@mui/material";
 import { HeaderDashboard } from "./components/HeaderDashboard";
 import { FilaDeEspera } from "./components/FilaDeEspera";
 import { EmAtendimento } from "./components/EmAtendimento";
-import { Alertas } from "./components/Alertas";
+// import { Alertas } from "./components/Alertas";
 import { Stats } from "./components/Stats";
 
 export const Dashboard = () => {
@@ -14,7 +14,7 @@ export const Dashboard = () => {
       <Grid container spacing={3}>
         <FilaDeEspera />
         <EmAtendimento />
-        <Alertas />
+        {/* <Alertas /> */}
       </Grid>
     </Box>
   );

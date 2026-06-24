@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
 
 interface SintomaPacienteProps {
@@ -18,10 +19,8 @@ interface SintomaPacienteProps {
 const intensityColor = (v: number): "error" | "warning" | "success" =>
   v >= 8 ? "error" : v >= 5 ? "warning" : "success";
 
-
 export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
-
-  const { detalheChamado } = useDetalheChamado(id)
+  const { detalheChamado } = useDetalheChamado(id);
 
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
@@ -81,13 +80,22 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
                     </Typography>
                   </Stack>
 
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ textTransform: "capitalize" }}
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    sx={{ alignItems: "center" }}
                   >
-                    {sintoma.frequencia || "Frequência não informada"}
-                  </Typography>
+                    <TimelineIcon
+                      sx={{ fontSize: 12, color: "text.secondary" }}
+                    />
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ textTransform: "capitalize" }}
+                    >
+                      {sintoma.frequencia || "Frequência não informada"}
+                    </Typography>
+                  </Stack>
                 </Stack>
               </Card>
             ))}

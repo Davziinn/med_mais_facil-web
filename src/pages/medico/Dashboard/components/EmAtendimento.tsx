@@ -15,23 +15,34 @@ import StatusBadge from "../../../../components/StatusBadge";
 import { useFilaEmAtendimento } from "../../../../hooks/useFilaEmAtendimento";
 
 export const EmAtendimento = () => {
-  const { filaEmAtendimento, carregarFilaEmAtendimento } = useFilaEmAtendimento()
-  
+  const { filaEmAtendimento, carregarFilaEmAtendimento } =
+    useFilaEmAtendimento();
+
   useEffect(() => {
     carregarFilaEmAtendimento();
-  }, [])
+  }, []);
 
   return (
-    <Grid size={{ xs: 12, lg: 4 }}>
+    <Grid size={{ xs: 12, lg: 6 }}>
       <Card sx={{ height: "100%" }}>
         <Box sx={{ px: 2.5, py: 2 }}>
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
             Em Atendimento
           </Typography>
         </Box>
+
         <Divider />
+
         {filaEmAtendimento.length === 0 ? (
-          <Box sx={{ p: 4, textAlign: "center" }}>
+          <Box
+            sx={{
+              minHeight: "30vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              p: 4,
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
               Nenhum atendimento em andamento
             </Typography>

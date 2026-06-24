@@ -71,6 +71,9 @@ export const Encaminhamento = () => {
     severity: "success" | "error";
   } | null>(null);
 
+
+  console.log("detalheChamado", detalheChamado);
+
   // Sem ID na rota: exibe lista de pacientes da fila
   if (!id) {
     const filaFiltrada = filaEspera.filter((fila) =>
