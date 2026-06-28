@@ -85,8 +85,8 @@ export const ProntuarioModal = ({
           </Typography>
           <Stack
             direction="row"
-            spacing={1}
-            sx={{ flexWrap: "wrap", gap: 1, mt: 0.5 }}
+            spacing={0.5}
+            sx={{ mt: 0.5 }}
           >
             {prontuario?.condicoesPreexistentes?.length === 0 ? (
               <Typography variant="body2" color="text.secondary">

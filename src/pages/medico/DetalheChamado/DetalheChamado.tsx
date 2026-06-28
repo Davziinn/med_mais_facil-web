@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Box, Grid, Typography, Button } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 import { HeaderDetalhe } from "./components/HeaderDetalhe";
@@ -10,6 +11,12 @@ export const DetalheChamado = () => {
   const { id } = useParams();
   const idNumber = Number(id);
   const { detalheChamado } = useDetalheChamado(idNumber);
+
+  // Estado compartilhado entre HeaderDetalhe e AlertasEventos.
+  // Vive aqui porque o useDetalheChamado não tem cache compartilhado entre instâncias.
+  const [atendimentoIniciado, setAtendimentoIniciado] = useState(false);
+  const [atendimentoId, setAtendimentoId] = useState<number | null>(null);
+  const [atendimentoEncerrado, setAtendimentoEncerrado] = useState(false);
 
   if (!id) {
     return (
@@ -28,12 +35,28 @@ export const DetalheChamado = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <HeaderDetalhe id={idNumber} chamado={detalheChamado} />
+      <HeaderDetalhe
+        id={idNumber}
+        chamado={detalheChamado}
+        atendimentoIniciado={atendimentoIniciado}
+        atendimentoId={atendimentoId}
+        atendimentoEncerrado={atendimentoEncerrado}
+        onAtendimentoIniciado={(novoAtendimentoId) => {
+          setAtendimentoIniciado(true);
+          setAtendimentoId(novoAtendimentoId);
+        }}
+        onAtendimentoEncerrado={() => setAtendimentoEncerrado(true)}
+      />
 
       <Grid container spacing={3}>
         <PacienteInfo id={idNumber} />
         <SintomaPaciente id={idNumber} />
-        <AlertasEventos id={idNumber} />
+        <AlertasEventos
+          id={idNumber}
+          atendimentoIniciado={atendimentoIniciado}
+          atendimentoId={atendimentoId}
+          atendimentoEncerrado={atendimentoEncerrado}
+        />
       </Grid>
     </Box>
   );

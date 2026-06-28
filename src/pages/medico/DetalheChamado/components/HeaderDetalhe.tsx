@@ -32,9 +32,22 @@ import { useAuth } from "../../../../contexts/AuthContext";
 interface HeaderDetalheProps {
   id: number;
   chamado: DetalheChamadoUI | null;
+  atendimentoIniciado: boolean;
+  atendimentoId: number | null;
+  atendimentoEncerrado: boolean;
+  onAtendimentoIniciado: (atendimentoId: number) => void;
+  onAtendimentoEncerrado: () => void;
 }
 
-export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
+export const HeaderDetalhe = ({
+  id,
+  chamado,
+  atendimentoIniciado,
+  atendimentoId,
+  atendimentoEncerrado,
+  onAtendimentoIniciado,
+  onAtendimentoEncerrado,
+}: HeaderDetalheProps) => {
   const [atendimentoOpen, setAtendimentoOpen] = useState(false);
   const [prescricaoOpen, setPrescricaoOpen] = useState(false);
 
@@ -46,12 +59,8 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
   const [loadingInicio, setLoadingInicio] = useState(false);
   const [loadingEncerramento, setLoadingEncerramento] = useState(false);
 
-  const [atendimentoId, setAtendimentoId] = useState<number | null>(null);
-
-  const [atendimentoIniciado, setAtendimentoIniciado] = useState(false);
   const [atendimentoConfirmado, setAtendimentoConfirmado] = useState(false);
   const [prescricaoFeita, setPrescricaoFeita] = useState(false);
-  const [atendimentoEncerrado, setAtendimentoEncerrado] = useState(false);
 
   const podeEncerrar = atendimentoConfirmado && prescricaoFeita && !atendimentoEncerrado;
 
@@ -61,22 +70,13 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
   const { usuario } = useAuth();
 
   useEffect(() => {
-  if (!detalheChamado) return;
+    if (!detalheChamado) return;
 
-  if (detalheChamado.statusChamado === "EM_ATENDIMENTO") {
-    setAtendimentoIniciado(true);
-    setAtendimentoConfirmado(true);
-    setPrescricaoFeita(true);
-  }
-
-  if (detalheChamado.statusChamado === "FINALIZADO") {
-    setAtendimentoEncerrado(true);
-  }
-
-  if (detalheChamado.atendimentoId) {
-    setAtendimentoId(detalheChamado.atendimentoId); 
-  }
-}, [detalheChamado]);
+    if (detalheChamado.statusChamado === "EM_ATENDIMENTO") {
+      setAtendimentoConfirmado(true);
+      setPrescricaoFeita(true);
+    }
+  }, [detalheChamado]);
 
   const handleBotaoAtendimento = () => {
     if (atendimentoIniciado) {
@@ -96,13 +96,13 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
       const resultado = await iniciarAtendimento(id, medicoId);
 
       if (resultado) {
-        setAtendimentoId(resultado.id);
-        setAtendimentoIniciado(true);
+        onAtendimentoIniciado(resultado.id);
 
         if (detalheChamado) {
           setDetalheChamado({
             ...detalheChamado,
             statusChamado: "EM_ATENDIMENTO",
+            atendimentoId: resultado.id,
           });
         }
 
@@ -127,7 +127,7 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
       const resultado = await encerrarAtendimento(atendimentoId);
 
       if (resultado) {
-        setAtendimentoEncerrado(true);
+        onAtendimentoEncerrado();
 
         if (detalheChamado) {
           setDetalheChamado({
@@ -178,8 +178,6 @@ export const HeaderDetalhe = ({ id, chamado }: HeaderDetalheProps) => {
             {detalheChamado?.dataAbertura
               ? formatDateTime(detalheChamado.dataAbertura)
               : ""}
-            {/* {" · "}
-            Hospital Kra Lho */}
           </Typography>
         </Box>
 

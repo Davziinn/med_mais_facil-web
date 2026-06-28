@@ -1,4 +1,4 @@
-import { Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
+import { Box, Typography } from "@mui/material"
 
 export const HeaderHistorico = () => {
     return (
@@ -11,14 +11,6 @@ export const HeaderHistorico = () => {
                     Consulte atendimentos finalizados e cancelados, com diagnósticos e produtividade
                 </Typography>
             </Box>
-            <ToggleButtonGroup
-                exclusive
-                size="small"
-            >
-                <ToggleButton value="hoje">Hoje</ToggleButton>
-                <ToggleButton value="semana">7 dias</ToggleButton>
-                <ToggleButton value="mes">30 dias</ToggleButton>
-            </ToggleButtonGroup>
         </Box>
     )
 }
