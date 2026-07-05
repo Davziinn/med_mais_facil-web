@@ -23,6 +23,7 @@ import { Sintomas } from "../pages/administrador/Sintomas/Sintomas";
 import { Eventos } from "../pages/administrador/EventoClinico/Eventos";
 import Logs from "../pages/administrador/LogsAuditoria/Logs";
 import { Configuracoes } from "../pages/administrador/Configuracoes/Configuracoes";
+import Exames from "../pages/administrador/Exames/Exame";
 
 export const router = createBrowserRouter([
   {
@@ -190,6 +191,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute roles={["ADMINISTRADOR"]}>
             <Sintomas />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/adm/exames",
+        element: (
+          <ProtectedRoute roles={["ADMINISTRADOR"]}>
+            <Exames />
           </ProtectedRoute>
         ),
       },

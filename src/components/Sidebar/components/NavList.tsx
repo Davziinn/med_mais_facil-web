@@ -17,6 +17,7 @@ import CallSplitIcon from "@mui/icons-material/CallSplit";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import HealingIcon from "@mui/icons-material/Healing";
+import BiotechIcon from '@mui/icons-material/Biotech';
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -48,11 +49,12 @@ const navByRole: Record<Role, NavItem[]> = {
   ],
 
   ADMINISTRADOR: [
-    { to: "/adm",                icon: <AdminPanelSettingsIcon />, label: "Painel ADM",        exact: true },
+    { to: "/adm",                icon: <AdminPanelSettingsIcon />, label: "Painel ADM",       exact: true},
     { to: "/adm/usuarios",       icon: <PeopleIcon />,            label: "Usuários"                       },
     { to: "/adm/hospitais",      icon: <LocalHospitalIcon />,     label: "Hospitais"                      },
     { to: "/adm/especialidades", icon: <MedicalServicesIcon />,   label: "Especialidades"                 },
     { to: "/adm/sintomas",       icon: <HealingIcon />,           label: "Sintomas"                       },
+    { to: "/adm/exames",         icon: <BiotechIcon />,           label: "Exames"                         },
     { to: "/adm/eventos",        icon: <EventNoteIcon />,         label: "Eventos Clínicos"               },
     { to: "/adm/logs",           icon: <ReceiptLongIcon />,       label: "Logs / Auditoria"               },
     { to: "/adm/configuracoes",  icon: <SettingsIcon />,          label: "Configurações"                  },

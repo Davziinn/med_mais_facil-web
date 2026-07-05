@@ -1,29 +1,23 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import {
-  Alert,
-  Box,
-  Button,
-  IconButton,
-  Snackbar,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Button, IconButton, Stack, Typography } from "@mui/material";
 
 import StopCircleIcon from "@mui/icons-material/StopCircle";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import AtendimentoModal from "../../../../components/AtendimentoModal";
 import PrescricaoModal from "../../../../components/PrescricaoModal";
 import PrioridadeBadge from "../../../../components/PrioridadeBadge";
 import StatusBadge from "../../../../components/StatusBadge";
 import ConfirmDialog from "../../../../components/ConfirmDialog";
+import { FeedbackSnackbar } from "../../../../components/FeedbackSnackbar";
 
 import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
 import { useEncerrarAtendimento } from "../../../../hooks/useEncerrarAtendimento";
 import { useIniciarAtendimento } from "../../../../hooks/useIniciarAtendimento";
+import { useAtendimentoFlow } from "../../../../hooks/useAtendimentoFlow";
+import { useFeedback } from "../../../../hooks/useFeedback";
 
 import { formatDateTime } from "../../../../utils/FormataTempo";
 import type { DetalheChamadoUI } from "../../../../mappers/detalheMapper";
@@ -54,29 +48,18 @@ export const HeaderDetalhe = ({
   const [confirmarInicioOpen, setConfirmarInicioOpen] = useState(false);
   const [confirmarEncerramentoOpen, setConfirmarEncerramentoOpen] = useState(false);
 
-  const [feedback, setFeedback] = useState<string | null>(null);
-
   const [loadingInicio, setLoadingInicio] = useState(false);
   const [loadingEncerramento, setLoadingEncerramento] = useState(false);
-
-  const [atendimentoConfirmado, setAtendimentoConfirmado] = useState(false);
-  const [prescricaoFeita, setPrescricaoFeita] = useState(false);
-
-  const podeEncerrar = atendimentoConfirmado && prescricaoFeita && !atendimentoEncerrado;
 
   const { detalheChamado, setDetalheChamado } = useDetalheChamado(id);
   const { iniciarAtendimento } = useIniciarAtendimento();
   const { encerrarAtendimento } = useEncerrarAtendimento();
   const { usuario } = useAuth();
 
-  useEffect(() => {
-    if (!detalheChamado) return;
+  const { feedback, showSuccess, showError, clearFeedback } = useFeedback();
 
-    if (detalheChamado.statusChamado === "EM_ATENDIMENTO") {
-      setAtendimentoConfirmado(true);
-      setPrescricaoFeita(true);
-    }
-  }, [detalheChamado]);
+  const { podeEncerrar, marcarAtendimentoConfirmado, marcarPrescricaoFeita } =
+    useAtendimentoFlow(detalheChamado, atendimentoEncerrado);
 
   const handleBotaoAtendimento = () => {
     if (atendimentoIniciado) {
@@ -108,11 +91,11 @@ export const HeaderDetalhe = ({
 
         setConfirmarInicioOpen(false);
         setAtendimentoOpen(true);
-        setFeedback("Atendimento iniciado com sucesso!");
+        showSuccess("Atendimento iniciado com sucesso!");
       }
     } catch (error) {
       console.error(error);
-      setFeedback("Erro ao iniciar atendimento.");
+      showError("Erro ao iniciar atendimento.");
     } finally {
       setLoadingInicio(false);
     }
@@ -137,11 +120,11 @@ export const HeaderDetalhe = ({
         }
 
         setConfirmarEncerramentoOpen(false);
-        setFeedback("Atendimento encerrado com sucesso!");
+        showSuccess("Atendimento encerrado com sucesso!");
       }
     } catch (error) {
       console.error(error);
-      setFeedback("Erro ao encerrar atendimento.");
+      showError("Erro ao encerrar atendimento.");
     } finally {
       setLoadingEncerramento(false);
     }
@@ -149,13 +132,7 @@ export const HeaderDetalhe = ({
 
   return (
     <>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-        }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <IconButton component={Link} to="/fila">
           <ArrowBackIcon />
         </IconButton>
@@ -217,8 +194,8 @@ export const HeaderDetalhe = ({
         chamado={chamado}
         atendimentoId={atendimentoId}
         onConfirm={() => {
-          setAtendimentoConfirmado(true);
-          setFeedback("Atendimento registrado com sucesso!");
+          marcarAtendimentoConfirmado();
+          showSuccess("Atendimento registrado com sucesso!");
         }}
       />
 
@@ -228,8 +205,8 @@ export const HeaderDetalhe = ({
         chamado={chamado}
         atendimentoId={atendimentoId}
         onConfirm={() => {
-          setPrescricaoFeita(true);
-          setFeedback("Prescrição salva com sucesso!");
+          marcarPrescricaoFeita();
+          showSuccess("Prescrição salva com sucesso!");
         }}
       />
 
@@ -256,23 +233,7 @@ export const HeaderDetalhe = ({
         onCancel={() => setConfirmarEncerramentoOpen(false)}
       />
 
-      <Snackbar
-        open={!!feedback}
-        autoHideDuration={3500}
-        onClose={() => setFeedback(null)}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-      >
-        <Alert
-          severity={feedback?.includes("Erro") ? "error" : "success"}
-          variant="filled"
-          onClose={() => setFeedback(null)}
-        >
-          {feedback}
-        </Alert>
-      </Snackbar>
+      <FeedbackSnackbar feedback={feedback} onClose={clearFeedback} />
     </>
   );
 };

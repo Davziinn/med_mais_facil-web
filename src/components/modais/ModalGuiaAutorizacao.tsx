@@ -1,260 +1,303 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Button,
-  Stack,
+  Box,
   Typography,
+  Stack,
+  IconButton,
   TextField,
-  FormGroup,
-  FormControlLabel,
+  InputAdornment,
   Checkbox,
-  CircularProgress,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Chip,
   Divider,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import SearchIcon from "@mui/icons-material/Search";
+import DescriptionIcon from "@mui/icons-material/Description";
 import type { DetalheChamadoUI } from "../../mappers/detalheMapper";
-import { examesMock } from "../../mocks/examesMock";
+import { useGuiaMedica } from "../../hooks/useGuiaMedica";
+import { useExame } from "../../hooks/useExame";
+import type { GuiaMedicaResponseDTO, GuiaMedicaRequestDTO } from "../../service/api/guiaMedicaService";
 
-
-export interface ExameResumo {
-  id: number;
-  nome: string;
-}
-
-export interface GuiaMedicaCriada {
-  id: number;
-  numeroGuia: string;
-  statusGuiaMedica: "PENDENTE" | "APROVADA" | "NEGADA";
-  dataSolicitacao: string;
-  convenio: string;
-  cid10: string; 
-  indicacaoClinica: string; 
-  observacoes?: string; 
-  atendimentoId: number;
-  exames: ExameResumo[];
-}
-
-interface GuiaAutorizacaoModalProps {
+interface Props {
   open: boolean;
   onClose: () => void;
   chamado: DetalheChamadoUI | null;
   atendimentoId: number | null;
-  guiaParaEditar?: GuiaMedicaCriada | null;
-  onConfirm: (guia: GuiaMedicaCriada) => void;
+  guiaParaEditar?: GuiaMedicaResponseDTO | null;
+  onConfirm: (guia: GuiaMedicaResponseDTO) => void;
 }
 
-function gerarNumeroGuiaMock(): string {
-  const agora = new Date();
-  const aaaa = agora.getFullYear();
-  const mm = String(agora.getMonth() + 1).padStart(2, "0");
-  const dd = String(agora.getDate()).padStart(2, "0");
-  const sufixo = Math.floor(100000 + Math.random() * 900000);
-  return `GUIA-${aaaa}${mm}${dd}-${sufixo}`;
-}
+const OBS_MAX = 300;
 
-// MOCK — trocar por POST /guias-medicas (criação) e PUT /guias-medicas/{id} (edição)
-// quando o backend existir. No mock, toda guia fica em PENDENTE pra sempre, porque
-// a transição pra APROVADA/NEGADA é assíncrona (vem do backend/convênio).
-function salvarGuiaMock(
-  payload: {
-    atendimentoId: number;
-    convenio: string;
-    cid10: string;
-    indicacaoClinica: string;
-    observacoes?: string;
-    exameIds: number[];
-  },
-  guiaExistente?: GuiaMedicaCriada | null
-): Promise<GuiaMedicaCriada> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const exames = examesMock.filter((e) => payload.exameIds.includes(e.id));
-
-      resolve({
-        id: guiaExistente?.id ?? Math.floor(Math.random() * 10000),
-        numeroGuia: guiaExistente?.numeroGuia ?? gerarNumeroGuiaMock(),
-        statusGuiaMedica: guiaExistente?.statusGuiaMedica ?? "PENDENTE",
-        dataSolicitacao: guiaExistente?.dataSolicitacao ?? new Date().toISOString(),
-        convenio: payload.convenio,
-        cid10: payload.cid10,
-        indicacaoClinica: payload.indicacaoClinica,
-        observacoes: payload.observacoes,
-        atendimentoId: payload.atendimentoId,
-        exames: exames.map((e) => ({ id: e.id, nome: e.nome })),
-      });
-    }, 600);
-  });
-}
-
-export default function GuiaAutorizacaoModal({
+export default function ModalGuiaAutorizacao({
   open,
   onClose,
   chamado,
   atendimentoId,
   guiaParaEditar,
   onConfirm,
-}: GuiaAutorizacaoModalProps) {
-  const [exameIdsSelecionados, setExameIdsSelecionados] = useState<number[]>([]);
-  const [cid10, setCid10] = useState("");
+}: Props) {
+  const { cadastrarGuiaMedica, editarGuiaMedica } = useGuiaMedica();
+  const { exames, loading: carregandoExames, error: erroExames, carregarExamesAtivos } = useExame();
+
+  const [busca, setBusca] = useState("");
+  const [selecionados, setSelecionados] = useState<number[]>([]);
+  const [cidExame, setCidExame] = useState("");
   const [indicacaoClinica, setIndicacaoClinica] = useState("");
-  const [observacoes, setObservacoes] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [obs, setObs] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [salvando, setSalvando] = useState(false);
 
   const modoEdicao = !!guiaParaEditar;
-  const convenio = chamado?.paciente?.convenio ?? "-";
+  const convenio = chamado?.paciente?.convenio ?? "Particular";
 
-  // Preenche o form quando abre em modo edição, ou limpa quando abre pra criar
+  // Preenche o form em modo edição, ou reseta em modo criação — e recarrega exames ativos — toda vez que o modal abre
   useEffect(() => {
     if (!open) return;
 
+    carregarExamesAtivos();
+
     if (guiaParaEditar) {
-      setExameIdsSelecionados(guiaParaEditar.exames.map((e) => e.id));
-      setCid10(guiaParaEditar.cid10);
+      setSelecionados(guiaParaEditar.exames.map((e) => e.id));
+      setCidExame(guiaParaEditar.cidExame);
       setIndicacaoClinica(guiaParaEditar.indicacaoClinica);
-      setObservacoes(guiaParaEditar.observacoes ?? "");
+      setObs(guiaParaEditar.observacoes ?? "");
     } else {
-      setExameIdsSelecionados([]);
-      setCid10("");
+      setSelecionados([]);
+      setCidExame("");
       setIndicacaoClinica("");
-      setObservacoes("");
+      setObs("");
     }
+    setBusca("");
+    setErro(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, guiaParaEditar]);
 
-  const handleToggleExame = (id: number) => {
-  const exame = examesMock.find((e) => e.id === id);
+  const filtrados = useMemo(() => {
+    const q = busca.trim().toLowerCase();
+    if (!q) return exames;
+    return exames.filter((e) => e.nome.toLowerCase().includes(q));
+  }, [busca, exames]);
 
-  console.log("Exame clicado:", exame);
-
-  setExameIdsSelecionados((prev) =>
-    prev.includes(id)
-      ? prev.filter((e) => e !== id)
-      : [...prev, id]
-  );
-};
+  const toggle = (id: number) =>
+    setSelecionados((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
 
   const handleClose = () => {
-    if (loading) return;
+    if (salvando) return;
     onClose();
   };
 
   const formValido =
-    exameIdsSelecionados.length > 0 &&
-    cid10.trim().length > 0 &&
+    selecionados.length > 0 &&
+    cidExame.trim().length > 0 &&
     indicacaoClinica.trim().length > 0;
 
-  const handleSubmit = async () => {
-    if (!atendimentoId || !formValido) return;
+  const handleConfirm = async () => {
+    if (!atendimentoId) return;
 
-    setLoading(true);
+    if (!formValido) {
+      setErro("Preencha o CID, a indicação clínica e selecione ao menos um exame.");
+      return;
+    }
+    setErro(null);
+    setSalvando(true);
 
-    const guiaSalva = await salvarGuiaMock(
-      {
-        atendimentoId,
-        convenio,
-        cid10: cid10.trim(),
-        indicacaoClinica: indicacaoClinica.trim(),
-        observacoes: observacoes.trim() || undefined,
-        exameIds: exameIdsSelecionados,
-      },
-      guiaParaEditar
-    );
+    const request: GuiaMedicaRequestDTO = {
+      cidExame: cidExame.trim(),
+      indicacaoClinica: indicacaoClinica.trim(),
+      convenio,
+      observacoes: obs.trim(),
+      atendimentoId,
+      examesIds: selecionados,
+    };
 
-    setLoading(false);
-    onConfirm(guiaSalva);
+    try {
+      const guia =
+        modoEdicao && guiaParaEditar
+          ? await editarGuiaMedica(guiaParaEditar.id, request)
+          : await cadastrarGuiaMedica(request);
+
+      onConfirm(guia);
+    } catch {
+      setErro("Não foi possível salvar a guia. Tente novamente.");
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        {modoEdicao ? "Editar Pré-Solicitação de Guia" : "Nova Pré-Solicitação de Guia"}
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ pr: 6 }}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+          <DescriptionIcon color="primary" />
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              {modoEdicao ? "Editar Pré-Solicitação de Guia" : "Gerar Pré-Solicitação de Guia"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Selecione os exames que deverão ser enviados ao convênio.
+            </Typography>
+          </Box>
+        </Stack>
+        <IconButton onClick={handleClose} sx={{ position: "absolute", right: 8, top: 8 }} aria-label="Fechar">
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
 
-      <DialogContent>
-        <Stack spacing={2.5} sx={{ mt: 1 }}>
-          <TextField label="Convênio" value={convenio} fullWidth disabled size="small" />
-
-          <TextField
-            label="CID-10"
-            placeholder="Ex: J18.9"
-            value={cid10}
-            onChange={(e) => setCid10(e.target.value)}
-            fullWidth
-            required
+      <DialogContent dividers sx={{ p: 0 }}>
+        <Box sx={{ px: 3, pt: 2, pb: 1 }}>
+          <Chip
             size="small"
+            color="primary"
+            variant="outlined"
+            label={`Convênio: ${convenio}`}
+            sx={{ mb: 1.5, fontWeight: 600 }}
           />
 
+          <Stack spacing={2} sx={{ mb: 2 }}>
+            <TextField
+              label="CID"
+              placeholder="Ex: J18.9"
+              value={cidExame}
+              onChange={(e) => setCidExame(e.target.value)}
+              fullWidth
+              required
+              size="small"
+            />
+            <TextField
+              label="Indicação Clínica"
+              placeholder="Justificativa clínica para a solicitação dos exames"
+              value={indicacaoClinica}
+              onChange={(e) => setIndicacaoClinica(e.target.value)}
+              fullWidth
+              required
+              multiline
+              minRows={2}
+              size="small"
+            />
+          </Stack>
+
           <TextField
-            label="Indicação Clínica"
-            placeholder="Justificativa clínica para a solicitação dos exames"
-            value={indicacaoClinica}
-            onChange={(e) => setIndicacaoClinica(e.target.value)}
             fullWidth
-            required
-            multiline
-            minRows={2}
+            size="small"
+            placeholder="Pesquisar exame..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
+        </Box>
 
-          <Divider />
+        <Divider />
 
-          <Typography variant="subtitle2">Exames solicitados</Typography>
+        <Box sx={{ maxHeight: 280, overflowY: "auto" }}>
+          {carregandoExames ? (
+            <Box sx={{ p: 3, textAlign: "center" }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : erroExames ? (
+            <Box sx={{ p: 3, textAlign: "center" }}>
+              <Typography variant="body2" color="error">
+                {erroExames}
+              </Typography>
+            </Box>
+          ) : (
+            <List disablePadding>
+              {filtrados.map((ex) => {
+                const checked = selecionados.includes(ex.id);
+                return (
+                  <ListItem key={ex.id} disablePadding divider>
+                    <ListItemButton onClick={() => toggle(ex.id)} dense>
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <Checkbox edge="start" checked={checked} tabIndex={-1} disableRipple />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {ex.nome}
+                          </Typography>
+                        }
+                        secondary={
+                          <Typography variant="caption" color="text.secondary">
+                            {ex.descricao}
+                          </Typography>
+                        }
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+              {filtrados.length === 0 && (
+                <Box sx={{ p: 3, textAlign: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Nenhum exame encontrado.
+                  </Typography>
+                </Box>
+              )}
+            </List>
+          )}
+        </Box>
 
-          <FormGroup>
-            {examesMock.map((exame) => (
-              <FormControlLabel
-                key={exame.id}
-                control={
-                  <Checkbox
-                    checked={exameIdsSelecionados.includes(exame.id)}
-                    onChange={() => handleToggleExame(exame.id)}
-                  />
-                }
-                label={
-                  <Stack>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {exame.nome}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {exame.descricao}
-                    </Typography>
-                  </Stack>
-                }
-                sx={{ alignItems: "flex-start", mb: 1 }}
-              />
-            ))}
-          </FormGroup>
+        <Divider />
 
+        <Box sx={{ px: 3, py: 2 }}>
           <TextField
-            label="Observações"
+            fullWidth
             multiline
             minRows={3}
-            fullWidth
-            value={observacoes}
-            onChange={(e) => setObservacoes(e.target.value.slice(0, 300))}
-            helperText={`${observacoes.length}/300`}
+            label="Observações para o convênio"
+            placeholder="Justificativa clínica, urgência, dados adicionais..."
+            value={obs}
+            onChange={(e) => setObs(e.target.value.slice(0, OBS_MAX))}
+            helperText={`${obs.length}/${OBS_MAX} caracteres`}
           />
-        </Stack>
+          {erro && (
+            <Alert severity="warning" sx={{ mt: 1.5 }}>
+              {erro}
+            </Alert>
+          )}
+        </Box>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          Cancelar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={loading || !formValido || !atendimentoId}
-        >
-          {loading ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : modoEdicao ? (
-            "Salvar Alterações"
-          ) : (
-            "Gerar Pré-Solicitação"
-          )}
-        </Button>
+      <DialogActions sx={{ px: 3, py: 1.5, justifyContent: "space-between" }}>
+        <Typography variant="body2" color="text.secondary">
+          Exames selecionados: <strong>{selecionados.length}</strong>
+        </Typography>
+        <Stack direction="row" spacing={1}>
+          <Button onClick={handleClose} disabled={salvando}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            variant="contained"
+            disabled={salvando || !atendimentoId}
+            startIcon={salvando ? <CircularProgress size={16} color="inherit" /> : <DescriptionIcon />}
+          >
+            {salvando ? "Salvando..." : modoEdicao ? "Salvar Alterações" : "Gerar Pré-Solicitação"}
+          </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );

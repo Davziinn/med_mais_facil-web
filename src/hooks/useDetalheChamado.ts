@@ -7,7 +7,7 @@ export const useDetalheChamado = (id: number) => {
   const [detalheChamado, setDetalheChamado] = useState<DetalheChamadoUI | null>(
     null,
   );
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const buscarDetalheChamado = useCallback(async () => {
     try {
