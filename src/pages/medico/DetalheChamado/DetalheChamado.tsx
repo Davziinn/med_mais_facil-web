@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Box, Button, CircularProgress, Grid, Typography } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 import { HeaderDetalhe } from "./components/HeaderDetalhe";
@@ -10,11 +9,7 @@ import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 export const DetalheChamado = () => {
   const { id } = useParams();
   const idNumber = Number(id);
-  const { detalheChamado, loading } = useDetalheChamado(idNumber);
-
-  const [atendimentoIniciado, setAtendimentoIniciado] = useState(false);
-  const [atendimentoId, setAtendimentoId] = useState<number | null>(null);
-  const [atendimentoEncerrado, setAtendimentoEncerrado] = useState(false);
+  const { detalheChamado, setDetalheChamado, loading } = useDetalheChamado(idNumber);
 
   if (!id) {
     return (
@@ -50,6 +45,29 @@ export const DetalheChamado = () => {
     );
   }
 
+  const atendimentoIniciado =
+    detalheChamado.statusChamado === "EM_ATENDIMENTO" ||
+    detalheChamado.statusChamado === "FINALIZADO";
+
+  const atendimentoEncerrado = detalheChamado.statusChamado === "FINALIZADO";
+
+  const atendimentoId = detalheChamado.atendimentoId ?? null;
+
+  const handleAtendimentoIniciado = (novoAtendimentoId: number) => {
+    setDetalheChamado({
+      ...detalheChamado,
+      statusChamado: "EM_ATENDIMENTO",
+      atendimentoId: novoAtendimentoId,
+    });
+  };
+
+  const handleAtendimentoEncerrado = () => {
+    setDetalheChamado({
+      ...detalheChamado,
+      statusChamado: "FINALIZADO",
+    });
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
       <HeaderDetalhe
@@ -58,18 +76,15 @@ export const DetalheChamado = () => {
         atendimentoIniciado={atendimentoIniciado}
         atendimentoId={atendimentoId}
         atendimentoEncerrado={atendimentoEncerrado}
-        onAtendimentoIniciado={(novoAtendimentoId) => {
-          setAtendimentoIniciado(true);
-          setAtendimentoId(novoAtendimentoId);
-        }}
-        onAtendimentoEncerrado={() => setAtendimentoEncerrado(true)}
+        onAtendimentoIniciado={handleAtendimentoIniciado}
+        onAtendimentoEncerrado={handleAtendimentoEncerrado}
       />
 
       <Grid container spacing={3}>
-        <PacienteInfo id={idNumber} />
-        <SintomaPaciente id={idNumber} />
+        <PacienteInfo chamado={detalheChamado} />
+        <SintomaPaciente chamado={detalheChamado} />
         <AlertasEventos
-          id={idNumber}
+          chamado={detalheChamado}
           atendimentoIniciado={atendimentoIniciado}
           atendimentoId={atendimentoId}
           atendimentoEncerrado={atendimentoEncerrado}

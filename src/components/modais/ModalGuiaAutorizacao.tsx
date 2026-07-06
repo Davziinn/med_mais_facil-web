@@ -267,7 +267,7 @@ export default function ModalGuiaAutorizacao({
             fullWidth
             multiline
             minRows={3}
-            label="Observações para o convênio"
+            label="Orientação para o paciente"
             placeholder="Justificativa clínica, urgência, dados adicionais..."
             value={obs}
             onChange={(e) => setObs(e.target.value.slice(0, OBS_MAX))}

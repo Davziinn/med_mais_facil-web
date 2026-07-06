@@ -1,4 +1,5 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -8,21 +9,23 @@ import {
   Stack,
   Tooltip,
   Typography,
+  CircularProgress,
+  Box,
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
 import ConfirmDialog from "../../../../components/ConfirmDialog";
 import { FeedbackSnackbar } from "../../../../components/FeedbackSnackbar";
 import { GuiaAutorizacaoItem } from "../../../../components/GuiaAutorizacaoItem";
 import { useFeedback } from "../../../../hooks/useFeedback";
-import ModalGuiaAutorizacao, {
-  type GuiaMedicaCriada,
-} from "../../../../components/modais/ModalGuiaAutorizacao";
+import { useGuiaMedica } from "../../../../hooks/useGuiaMedica";
+import ModalGuiaAutorizacao from "../../../../components/modais/ModalGuiaAutorizacao";
 import ModalGuiaVisualizacao from "../../../../components/modais/ModalGuiaVisualizacao";
+import type { GuiaMedicaResponseDTO } from "../../../../service/api/guiaMedicaService";
+import type { DetalheChamadoUI } from "../../../../mappers/detalheMapper";
 
 interface AlertasEventosProps {
-  id: number;
+  chamado: DetalheChamadoUI | null;
   atendimentoIniciado: boolean;
   atendimentoId: number | null;
   atendimentoEncerrado: boolean;
@@ -47,36 +50,47 @@ const severidadeConfig = {
 };
 
 export const AlertasEventos = ({
-  id,
+  chamado,
   atendimentoIniciado,
   atendimentoId,
   atendimentoEncerrado,
 }: AlertasEventosProps) => {
-  const { detalheChamado } = useDetalheChamado(id);
+  const {
+    guiasMedicas,
+    loading: carregandoGuias,
+    carregarGuiasMedicas,
+  } = useGuiaMedica();
 
   const [guiaOpen, setGuiaOpen] = useState(false);
-  const [guiaParaEditar, setGuiaParaEditar] = useState<GuiaMedicaCriada | null>(null);
-  const [guiaParaCancelar, setGuiaParaCancelar] = useState<GuiaMedicaCriada | null>(null);
-  const [guiaParaVisualizar, setGuiaParaVisualizar] = useState<GuiaMedicaCriada | null>(null);
-  const [guias, setGuias] = useState<GuiaMedicaCriada[]>([]);
+  const [guiaParaEditar, setGuiaParaEditar] =
+    useState<GuiaMedicaResponseDTO | null>(null);
+  const [guiaParaCancelar, setGuiaParaCancelar] =
+    useState<GuiaMedicaResponseDTO | null>(null);
+  const [guiaParaVisualizar, setGuiaParaVisualizar] =
+    useState<GuiaMedicaResponseDTO | null>(null);
 
   const { feedback, showSuccess, clearFeedback } = useFeedback();
 
   const botaoHabilitado = atendimentoIniciado && !atendimentoEncerrado;
+
+  useEffect(() => {
+    if (atendimentoId) {
+      carregarGuiasMedicas(atendimentoId);
+    }
+  }, [atendimentoId]);
 
   const abrirParaCriar = () => {
     setGuiaParaEditar(null);
     setGuiaOpen(true);
   };
 
-  const abrirParaEditar = (guia: GuiaMedicaCriada) => {
+  const abrirParaEditar = (guia: GuiaMedicaResponseDTO) => {
     setGuiaParaEditar(guia);
     setGuiaOpen(true);
   };
 
   const confirmarCancelamento = () => {
     if (!guiaParaCancelar) return;
-    setGuias((prev) => prev.filter((g) => g.id !== guiaParaCancelar.id));
     showSuccess(`Guia ${guiaParaCancelar.numeroGuia} cancelada.`);
     setGuiaParaCancelar(null);
   };
@@ -84,15 +98,25 @@ export const AlertasEventos = ({
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
       <Stack spacing={3}>
-        <Card sx={{ border: "1px solid", borderColor: "error.light", bgcolor: "#fef3f3" }}>
+        <Card
+          sx={{
+            border: "1px solid",
+            borderColor: "error.light",
+            bgcolor: "#fef3f3",
+          }}
+        >
           <CardContent>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: "center", mb: 2 }}
+            >
               <WarningAmberIcon color="error" fontSize="small" />
               <Typography variant="subtitle2">Sinais de Alerta</Typography>
             </Stack>
             <Stack spacing={1}>
-              {detalheChamado?.sinaisAlertas && detalheChamado.sinaisAlertas.length > 0 ? (
-                detalheChamado.sinaisAlertas.map((sinal, index) => {
+              {chamado?.sinaisAlertas && chamado.sinaisAlertas.length > 0 ? (
+                chamado.sinaisAlertas.map((sinal, index) => {
                   const config = severidadeConfig[sinal.severidade];
                   return (
                     <Chip
@@ -115,13 +139,18 @@ export const AlertasEventos = ({
 
         <Card>
           <CardContent>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: "center", mb: 2 }}
+            >
               <DescriptionIcon color="primary" fontSize="small" />
               <Typography variant="subtitle2">Eventos Recentes</Typography>
             </Stack>
             <Stack spacing={1}>
-              {detalheChamado?.eventosClinicos && detalheChamado.eventosClinicos.length > 0 ? (
-                detalheChamado.eventosClinicos.map((evento) => (
+              {chamado?.eventosClinicos &&
+              chamado.eventosClinicos.length > 0 ? (
+                chamado.eventosClinicos.map((evento) => (
                   <Chip
                     key={evento.id}
                     label={evento.descricao}
@@ -141,13 +170,21 @@ export const AlertasEventos = ({
         {/* Guia de Autorização */}
         <Card>
           <CardContent>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ alignItems: "center", mb: 2 }}
+            >
               <DescriptionIcon color="success" fontSize="small" />
               <Typography variant="subtitle2">Guia de Autorização</Typography>
             </Stack>
 
             <Tooltip
-              title={botaoHabilitado ? "" : "Inicie o atendimento para gerar a pré-solicitação de guia."}
+              title={
+                botaoHabilitado
+                  ? ""
+                  : "Inicie o atendimento para gerar a pré-solicitação de guia."
+              }
               arrow
             >
               <span>
@@ -163,18 +200,24 @@ export const AlertasEventos = ({
               </span>
             </Tooltip>
 
-            {guias.length > 0 && (
-              <Stack spacing={1.5} sx={{ mt: 2 }}>
-                {guias.map((guia) => (
-                  <GuiaAutorizacaoItem
-                    key={guia.id}
-                    guia={guia}
-                    onEditar={() => abrirParaEditar(guia)}
-                    onCancelar={() => setGuiaParaCancelar(guia)}
-                    onVisualizar={() => setGuiaParaVisualizar(guia)}
-                  />
-                ))}
-              </Stack>
+            {carregandoGuias ? (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : (
+              guiasMedicas.length > 0 && (
+                <Stack spacing={1.5} sx={{ mt: 2 }}>
+                  {guiasMedicas.map((guia) => (
+                    <GuiaAutorizacaoItem
+                      key={guia.id}
+                      guia={guia}
+                      onEditar={() => abrirParaEditar(guia)}
+                      onCancelar={() => setGuiaParaCancelar(guia)}
+                      onVisualizar={() => setGuiaParaVisualizar(guia)}
+                    />
+                  ))}
+                </Stack>
+              )
             )}
           </CardContent>
         </Card>
@@ -186,14 +229,10 @@ export const AlertasEventos = ({
           setGuiaOpen(false);
           setGuiaParaEditar(null);
         }}
-        chamado={detalheChamado}
+        chamado={chamado}
         atendimentoId={atendimentoId}
         guiaParaEditar={guiaParaEditar}
         onConfirm={(g) => {
-          setGuias((prev) => {
-            const existe = prev.some((item) => item.id === g.id);
-            return existe ? prev.map((item) => (item.id === g.id ? g : item)) : [...prev, g];
-          });
           setGuiaOpen(false);
           showSuccess(
             guiaParaEditar
@@ -201,15 +240,19 @@ export const AlertasEventos = ({
               : `Pré-solicitação ${g.numeroGuia} gerada com sucesso.`,
           );
           setGuiaParaEditar(null);
+
+          if (atendimentoId) {
+            carregarGuiasMedicas(atendimentoId);
+          }
         }}
       />
 
-      {guiaParaVisualizar && detalheChamado && (
+      {guiaParaVisualizar && chamado && (
         <ModalGuiaVisualizacao
           open={!!guiaParaVisualizar}
           onClose={() => setGuiaParaVisualizar(null)}
           guia={guiaParaVisualizar}
-          chamado={detalheChamado}
+          chamado={chamado}
           onCopy={(msg: string) => showSuccess(msg)}
         />
       )}

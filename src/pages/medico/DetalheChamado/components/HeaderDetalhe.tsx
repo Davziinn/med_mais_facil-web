@@ -13,7 +13,6 @@ import StatusBadge from "../../../../components/StatusBadge";
 import ConfirmDialog from "../../../../components/ConfirmDialog";
 import { FeedbackSnackbar } from "../../../../components/FeedbackSnackbar";
 
-import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
 import { useEncerrarAtendimento } from "../../../../hooks/useEncerrarAtendimento";
 import { useIniciarAtendimento } from "../../../../hooks/useIniciarAtendimento";
 import { useAtendimentoFlow } from "../../../../hooks/useAtendimentoFlow";
@@ -51,7 +50,6 @@ export const HeaderDetalhe = ({
   const [loadingInicio, setLoadingInicio] = useState(false);
   const [loadingEncerramento, setLoadingEncerramento] = useState(false);
 
-  const { detalheChamado, setDetalheChamado } = useDetalheChamado(id);
   const { iniciarAtendimento } = useIniciarAtendimento();
   const { encerrarAtendimento } = useEncerrarAtendimento();
   const { usuario } = useAuth();
@@ -59,7 +57,7 @@ export const HeaderDetalhe = ({
   const { feedback, showSuccess, showError, clearFeedback } = useFeedback();
 
   const { podeEncerrar, marcarAtendimentoConfirmado, marcarPrescricaoFeita } =
-    useAtendimentoFlow(detalheChamado, atendimentoEncerrado);
+    useAtendimentoFlow(chamado, atendimentoEncerrado);
 
   const handleBotaoAtendimento = () => {
     if (atendimentoIniciado) {
@@ -71,23 +69,21 @@ export const HeaderDetalhe = ({
   };
 
   const confirmarInicioAtendimento = async () => {
+    // trava contra duplo clique / duplo submit
+    if (loadingInicio) return;
+
     try {
       setLoadingInicio(true);
       const medicoId = usuario?.medicoId;
-      if (!medicoId) return;
+      if (!medicoId) {
+        showError("Não foi possível identificar o médico logado.");
+        return;
+      }
 
       const resultado = await iniciarAtendimento(id, medicoId);
 
       if (resultado) {
         onAtendimentoIniciado(resultado.id);
-
-        if (detalheChamado) {
-          setDetalheChamado({
-            ...detalheChamado,
-            statusChamado: "EM_ATENDIMENTO",
-            atendimentoId: resultado.id,
-          });
-        }
 
         setConfirmarInicioOpen(false);
         setAtendimentoOpen(true);
@@ -102,7 +98,7 @@ export const HeaderDetalhe = ({
   };
 
   const confirmarEncerramento = async () => {
-    if (!atendimentoId) return;
+    if (!atendimentoId || loadingEncerramento) return;
 
     try {
       setLoadingEncerramento(true);
@@ -111,13 +107,6 @@ export const HeaderDetalhe = ({
 
       if (resultado) {
         onAtendimentoEncerrado();
-
-        if (detalheChamado) {
-          setDetalheChamado({
-            ...detalheChamado,
-            statusChamado: "FINALIZADO",
-          });
-        }
 
         setConfirmarEncerramentoOpen(false);
         showSuccess("Atendimento encerrado com sucesso!");
@@ -140,21 +129,17 @@ export const HeaderDetalhe = ({
         <Box sx={{ flex: 1 }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              Senha {detalheChamado?.senha}
+              Senha {chamado?.senha}
             </Typography>
 
-            {detalheChamado && (
-              <PrioridadeBadge prioridade={detalheChamado.prioridadeChamado} />
-            )}
+            {chamado && <PrioridadeBadge prioridade={chamado.prioridadeChamado} />}
 
-            <StatusBadge status={detalheChamado?.statusChamado} />
+            <StatusBadge status={chamado?.statusChamado} />
           </Stack>
 
           <Typography>
             Aberto em{" "}
-            {detalheChamado?.dataAbertura
-              ? formatDateTime(detalheChamado.dataAbertura)
-              : ""}
+            {chamado?.dataAbertura ? formatDateTime(chamado.dataAbertura) : ""}
           </Typography>
         </Box>
 
@@ -162,7 +147,7 @@ export const HeaderDetalhe = ({
           <Button
             variant="contained"
             onClick={handleBotaoAtendimento}
-            disabled={atendimentoEncerrado}
+            disabled={atendimentoEncerrado || loadingInicio}
           >
             {atendimentoIniciado ? "Abrir Atendimento" : "Iniciar Atendimento"}
           </Button>

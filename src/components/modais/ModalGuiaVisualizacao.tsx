@@ -14,6 +14,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import PrintIcon from "@mui/icons-material/Print";
 import type { DetalheChamadoUI } from "../../mappers/detalheMapper";
 import type { GuiaMedicaResponseDTO } from "../../service/api/guiaMedicaService";
+import { calcularValidade, formatDateTime } from "../../utils/FormataTempo";
 
 interface GuiaVisualizacaoModalProps {
   open: boolean;
@@ -21,16 +22,6 @@ interface GuiaVisualizacaoModalProps {
   guia: GuiaMedicaResponseDTO;
   chamado: DetalheChamadoUI;
   onCopy?: (mensagem: string) => void;
-}
-
-function formatDataHora(iso: string) {
-  return new Date(iso).toLocaleString("pt-BR");
-}
-
-function calcularValidade(iso: string, dias = 30) {
-  const data = new Date(iso);
-  data.setDate(data.getDate() + dias);
-  return data.toLocaleDateString("pt-BR");
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
@@ -64,6 +55,8 @@ export default function ModalGuiaVisualizacao({
     navigator.clipboard.writeText(guia.numeroGuia);
     onCopy?.(`Número da guia ${guia.numeroGuia} copiado.`);
   };
+
+  console.log("ModalGuiaVisualizacao renderizado com guia:", guia);
 
   const handleImprimir = () => {
     window.print();
@@ -118,7 +111,7 @@ export default function ModalGuiaVisualizacao({
               sx={{ display: "block" }}
               color="text.secondary"
             >
-              Emitida em {formatDataHora(guia.dataSolicitacao)}
+              Emitida em {formatDateTime(guia.dataSolicitacao)}
             </Typography>
 
             <Typography

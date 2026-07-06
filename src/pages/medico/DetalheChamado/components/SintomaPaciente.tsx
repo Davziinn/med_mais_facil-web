@@ -10,17 +10,19 @@ import {
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import TimelineIcon from "@mui/icons-material/Timeline";
-import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
+// import { useDetalheChamado } from "../../../../hooks/useDetalheChamado";
+import type { DetalheChamadoUI } from "../../../../mappers/detalheMapper";
 
 interface SintomaPacienteProps {
-  id: number;
+  // id: number;
+  chamado: DetalheChamadoUI | null;
 }
 
 const intensityColor = (v: number): "error" | "warning" | "success" =>
   v >= 8 ? "error" : v >= 5 ? "warning" : "success";
 
-export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
-  const { detalheChamado } = useDetalheChamado(id);
+export const SintomaPaciente = ({ chamado }: SintomaPacienteProps) => {
+  // const { detalheChamado } = useDetalheChamado(id);
 
   return (
     <Grid size={{ xs: 12, lg: 4 }}>
@@ -36,11 +38,11 @@ export const SintomaPaciente = ({ id }: SintomaPacienteProps) => {
           </Stack>
 
           <Typography variant="body2" sx={{ fontWeight: 500, mb: 2 }}>
-            Queixa: {detalheChamado?.queixa || "Não informado"}
+            Queixa: {chamado?.queixa || "Não informado"}
           </Typography>
 
           <Stack spacing={2}>
-            {detalheChamado?.sintomas.map((sintoma, index) => (
+            {chamado?.sintomas.map((sintoma, index) => (
               <Card key={index} variant="outlined" sx={{ p: 2 }}>
                 <Box
                   sx={{

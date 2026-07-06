@@ -15,7 +15,7 @@ export interface GuiaMedicaResponseDTO {
     cidExame: string;
     indicacaoClinica: string;
     numeroGuia: string;
-    dataSolicitacao: string;
+    dataSolicitacao: Date;
     convenio: string;
     observacoes: string;
     atendimentoId: number;
