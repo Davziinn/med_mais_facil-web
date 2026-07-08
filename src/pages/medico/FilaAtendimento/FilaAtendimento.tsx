@@ -4,13 +4,13 @@ import { TabelaFilaAtendimento } from "./components/TabelaFilaAtendimento"
 import { useFilaEspera } from "../../../hooks/useFilaEspera";
 
 export const FilaAtendimento = () => {
-    const { filaEspera } = useFilaEspera();
+    const { filaEsperaEspecialidadeMedico } = useFilaEspera();
 
     
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
     
-            <HeaderFilaAtendimento totalPacientes={filaEspera.length} />
+            <HeaderFilaAtendimento totalPacientes={filaEsperaEspecialidadeMedico.length} />
             <Card>
                 <TabelaFilaAtendimento/>
             </Card>

@@ -17,7 +17,7 @@ import { useFilaEspera } from "../../../../hooks/useFilaEspera";
 import PrioridadeBadge from "../../../../components/PrioridadeBadge";
 
 export const FilaDeEspera = () => {
-  const { filaEspera } = useFilaEspera()
+  const { filaEsperaEspecialidadeMedico } = useFilaEspera()
   
   return (
     <Grid size={{ xs: 12, lg: 6 }}>
@@ -47,12 +47,12 @@ export const FilaDeEspera = () => {
         </Box>
         <Divider />
         <List disablePadding>
-          {filaEspera.slice(0, 5).map((fila, i) => (
+          {filaEsperaEspecialidadeMedico.slice(0, 5).map((fila, i) => (
             <ListItemButton
               key={fila.id}
-              // component={Link}
-              // to={`/chamados/${c.id}`}
-              divider={i < filaEspera.length - 1}
+              component={Link}
+              to={`/chamados/${fila.id}`}
+              divider={i < filaEsperaEspecialidadeMedico.length - 1}
             >
               <ListItemAvatar>
                 <Avatar

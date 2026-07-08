@@ -105,7 +105,7 @@ interface ModalAusenteState {
 export const DashboardRecepcao = () => {
   const navigate = useNavigate();
 
-  const { filaEspera, carregarFilaEspera } = useFilaEspera();
+  const { filaEsperaRecepcao, carregarFilaEsperaRecepcao } = useFilaEspera();
   const {
     metricas,
     carregarMetricas,
@@ -137,7 +137,7 @@ export const DashboardRecepcao = () => {
     await marcarPacienteComoAusente(modalAusente.paciente.id);
 
     await Promise.all([
-      carregarFilaEspera(),
+      carregarFilaEsperaRecepcao(),
       carregarFilaAguardandoCheckIn(),
       carregarMetricas(),
     ]);
@@ -155,7 +155,7 @@ export const DashboardRecepcao = () => {
     carregarFilaAguardandoCheckIn();
   }, []);
 
-  const fila = filaEspera.filter(
+  const fila = filaEsperaRecepcao.filter(
     (c) =>
       c.statusChamado === "EM_ESPERA" || c.statusChamado === "EM_ATENDIMENTO",
   );
@@ -168,7 +168,7 @@ export const DashboardRecepcao = () => {
         <Tooltip title="Atualizar">
           <IconButton
             sx={{ color: TEXT_DIM, border: `1px solid ${PANEL_BORDER}` }}
-            onClick={carregarFilaEspera}
+            onClick={carregarFilaEsperaRecepcao}
           >
             <RefreshIcon />
           </IconButton>

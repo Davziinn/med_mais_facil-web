@@ -29,7 +29,7 @@ export default function Busca() {
   } | null>(null);
 
   const { pacientes } = usePaciente();
-  const { filaEspera } = useFilaEspera();
+  const { filaEsperaRecepcao } = useFilaEspera();
 
   const { pacientesEncontrados, chamadosEncontrados } = useMemo(() => {
     if (!q) return { pacientesEncontrados: [], chamadosEncontrados: [] };
@@ -39,11 +39,11 @@ export default function Busca() {
 
     return {
       pacientesEncontrados: pacientes.filter((p) => inclui(p.nome, p.cpf)),
-      chamadosEncontrados: filaEspera.filter((c) =>
+      chamadosEncontrados: filaEsperaRecepcao.filter((c) =>
         inclui(c.senha, c.paciente?.nome, c.paciente?.cpf, c.queixa),
       ),
     };
-  }, [q, pacientes, filaEspera]);
+  }, [q, pacientes, filaEsperaRecepcao]);
 
   const total = pacientesEncontrados.length + chamadosEncontrados.length;
 

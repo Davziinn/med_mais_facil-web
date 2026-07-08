@@ -1,18 +1,18 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useState } from "react";
 import {
   mapPrioridadeChamado,
   type FilaEsperaUI,
 } from "../mappers/filaMapper";
-import { getFilaEspera } from "../service/api/filaEsperaService";
+import { getFilaEsperaEspecialidadeMedico, getFilaEsperaRecepcao } from "../service/api/filaEsperaService";
 
 export const useFilaEspera = () => {
-  const [filaEspera, setFilaEspera] = useState<FilaEsperaUI[]>(
-    [],
-  );
+  const [filaEsperaRecepcao, setFilaEsperaRecepcao] = useState<FilaEsperaUI[]>([]);
+  const [filaEsperaEspecialidadeMedico, setFilaEsperaEspecialidadeMedico] = useState<FilaEsperaUI[]>([]);
 
-  const carregarFilaEspera = async () => {
+  const carregarFilaEsperaRecepcao = async () => {
     try {
-      const data = await getFilaEspera();
+      const data = await getFilaEsperaRecepcao();
 
       const mappedData: FilaEsperaUI[] = data.map((item) => {
         return {
@@ -21,19 +21,38 @@ export const useFilaEspera = () => {
         };
       });
 
-      setFilaEspera(mappedData);
+      setFilaEsperaRecepcao(mappedData);
+    } catch (error) {
+      console.error("Erro ao carregar fila de Espera:", error);
+    }
+  };
+
+  const carregarFilaEsperaEspecialidadeMedico = async () => {
+    try {
+      const data = await getFilaEsperaEspecialidadeMedico();
+
+      const mappedData: FilaEsperaUI[] = data.map((item) => {
+        return {
+          ...item,
+          prioridadeChamado: mapPrioridadeChamado(item.prioridadeChamado),
+        };
+      });
+
+      setFilaEsperaEspecialidadeMedico(mappedData);
     } catch (error) {
       console.error("Erro ao carregar fila de Espera:", error);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    carregarFilaEspera();
+    carregarFilaEsperaRecepcao();
+    carregarFilaEsperaEspecialidadeMedico();
   }, []);
 
   return {
-    filaEspera,
-    carregarFilaEspera,
+    filaEsperaRecepcao,
+    carregarFilaEsperaRecepcao,
+    filaEsperaEspecialidadeMedico,
+    carregarFilaEsperaEspecialidadeMedico,
   };
 };

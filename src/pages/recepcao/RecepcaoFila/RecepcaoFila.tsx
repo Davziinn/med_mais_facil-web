@@ -85,7 +85,7 @@ type PacienteModal = {
 export const RecepcaoFila = () => {
   const navigate = useNavigate();
 
-  const { filaEspera } = useFilaEspera();
+  const { filaEsperaRecepcao } = useFilaEspera();
   const { marcarPacienteComoAusente, cancelarChamado } = useRecepcaoDashboard();
   const { alterarPrioridade } = useAlterarPrioridade();
   const {
@@ -94,7 +94,7 @@ export const RecepcaoFila = () => {
     buscarPacientePorNome,
   } = usePaciente();
 
-  const [filaLocal, setFilaLocal] = useState(filaEspera);
+  const [filaLocal, setFilaLocal] = useState(filaEsperaRecepcao);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<"todos" | Prioridade>("todos");
   const [toast, setToast] = useState<{
@@ -123,8 +123,8 @@ export const RecepcaoFila = () => {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setFilaLocal(filaEspera);
-  }, [filaEspera]);
+    setFilaLocal(filaEsperaRecepcao);
+  }, [filaEsperaRecepcao]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);

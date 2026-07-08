@@ -25,7 +25,12 @@ export interface FilaEsperaResponseDTO {
     tempoEspera: number;
 }
 
-export const getFilaEspera = async (): Promise<FilaEsperaResponseDTO[]> => {
+export const getFilaEsperaRecepcao = async (): Promise<FilaEsperaResponseDTO[]> => {
     const response = await api.get<FilaEsperaResponseDTO[]>('/chamado')
+    return response.data;
+}
+
+export const getFilaEsperaEspecialidadeMedico = async (): Promise<FilaEsperaResponseDTO[]> => {
+    const response = await api.get<FilaEsperaResponseDTO[]>('/chamado/fila/medico')
     return response.data;
 }

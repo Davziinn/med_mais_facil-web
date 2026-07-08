@@ -18,7 +18,7 @@ import StatusBadge from "../../../../components/StatusBadge";
 import { formatarTempo } from "../../../../utils/FormataTempo";
 
 export const TabelaFilaAtendimento = () => {
-  const { filaEspera } = useFilaEspera();
+  const { filaEsperaEspecialidadeMedico } = useFilaEspera();
 
   return (
     <TableContainer>
@@ -36,7 +36,7 @@ export const TabelaFilaAtendimento = () => {
         </TableHead>
 
         <TableBody>
-          {filaEspera.map((fila) => (
+          {filaEsperaEspecialidadeMedico.map((fila) => (
             <TableRow key={fila.id}>
               <TableCell>
                 <Chip
