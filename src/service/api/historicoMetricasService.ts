@@ -4,7 +4,7 @@ export interface HistoricoMetricasResponseDTO {
     totalPeriodo: number;
     finalizados: number;
     cancelados: number;
-    taxaCancelamento: number;
+    //taxaCancelamento: number;
 }
 
 export const getHistoricoMetricas = async (): Promise<HistoricoMetricasResponseDTO> => {

@@ -5,6 +5,7 @@ export interface RecepcaoDashboardMetricasResponseDTO {
     aguardandoCheckin: number;
     aguardando: number;
     ausentes: number;
+    aguardandoEncaminhamento: number;
     tempoMedioEspera: Date;
 }
 

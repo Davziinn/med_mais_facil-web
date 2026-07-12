@@ -49,12 +49,14 @@ export default function Login() {
     } catch (error) {
       const axiosError = error as AxiosError;
 
-      if (axiosError.response?.status === 401) {
-        setErro("Email ou senha incorretos.");
+      if (axiosError.response?.status === 400) {
+        setErro("E-mail ou senha inválidos. Verifique seu e-mail e senha e tente novamente.");
+      } else if (axiosError.response?.status === 401) {
+        setErro("Sua sessão expirou. Faça login novamente.");
       } else if (axiosError.response?.status === 403) {
-        setErro("Usuário desativado. Entre em contato com o administrador.");
+        setErro("Você não possui permissão para acessar este sistema.");
       } else {
-        setErro("Erro ao conectar com o servidor. Tente novamente.");
+        setErro("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
       }
     } finally {
       setCarregando(false);

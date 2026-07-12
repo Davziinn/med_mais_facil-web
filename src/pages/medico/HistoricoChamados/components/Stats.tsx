@@ -2,7 +2,7 @@
 import { Grid } from "@mui/material";
 import CancelIcon from "@mui/icons-material/Cancel";
 import HistoryIcon from "@mui/icons-material/History";
-import PercentIcon from "@mui/icons-material/Percent";
+//import PercentIcon from "@mui/icons-material/Percent";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { StatCard } from "../../../../components/StatCard";
 import { useHistoricoMetricas } from "../../../../hooks/useHistoricoMetricas";
@@ -18,7 +18,7 @@ export const Stats = () => {
 
   return (
     <Grid container spacing={2}>
-      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
         <StatCard
           title="Total no Período (3 meses)"
           value={historicoMetricas?.totalPeriodo}
@@ -27,7 +27,7 @@ export const Stats = () => {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
         <StatCard
           title="Finalizados"
           value={historicoMetricas?.finalizados}
@@ -36,7 +36,7 @@ export const Stats = () => {
         />
       </Grid>
 
-      <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+      <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
         <StatCard
           title="Cancelados"
           value={historicoMetricas?.cancelados}
@@ -45,6 +45,7 @@ export const Stats = () => {
         />
       </Grid>
 
+      {/*
       <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
         <StatCard
           title="Taxa Cancelamento"
@@ -54,7 +55,7 @@ export const Stats = () => {
         />
       </Grid>
 
-      {/*
+      
       Futuras métricas históricas possíveis:
 
       <StatCard

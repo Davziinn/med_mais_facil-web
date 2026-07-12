@@ -40,7 +40,9 @@ import { useRecepcaoDashboard } from "../../../hooks/useRecepcaoDashboard";
 import { ModalConfirmarCheckIn } from "../../../components/modais/ModalConfirmarCheckIn";
 import { ModalConfirmarAusente } from "../../../components/modais/ModalConfirmarAusente";
 import { ModalCancelarChamado } from "../../../components/modais/ModalCancelarChamado";
+import { ModalEncaminharChamado } from "../../../components/modais/ModalEncaminharChamado";
 import StatusBadge from "../../../components/StatusBadge";
+import { useEncaminharChamado } from "../../../hooks/useEncaminharChamado";
 
 function calcMinutos(data?: string | Date) {
   if (!data) return 0;
@@ -61,8 +63,13 @@ export const Checkin = () => {
   const { id } = useParams();
   const idNumero = id ? Number(id) : 0;
   const { detalheChamado } = useDetalheChamado(idNumero);
-  const { confirmarCheckIn, marcarPacienteComoAusente, cancelarChamado } =
-    useRecepcaoDashboard();
+  const {
+    confirmarCheckIn,
+    marcarPacienteComoAusente,
+    cancelarChamado,
+  } = useRecepcaoDashboard();
+
+  const { encaminharChamado } = useEncaminharChamado();
 
   const [tab, setTab] = useState(0);
   const [codigo, setCodigo] = useState("");
@@ -78,6 +85,9 @@ export const Checkin = () => {
   const [modalCancelar, setModalCancelar] = useState(false);
   const [loadingCancelar, setLoadingCancelar] = useState(false);
 
+  const [modalEncaminhar, setModalEncaminhar] = useState(false);
+  const [loadingEncaminhar, setLoadingEncaminhar] = useState(false);
+
   const pacienteModal = detalheChamado
     ? {
         id: detalheChamado.id,
@@ -89,8 +99,6 @@ export const Checkin = () => {
         statusChamado: detalheChamado.statusChamado,
       }
     : null;
-
-  console.log("AAAAAAAAAAA: ", pacienteModal);
 
   const handleConfirmarCheckIn = async () => {
     if (!detalheChamado) return;
@@ -134,6 +142,21 @@ export const Checkin = () => {
       setToast("Erro ao cancelar chamado");
     } finally {
       setLoadingCancelar(false);
+    }
+  };
+
+  const handleConfirmarEncaminhar = async (especialidadeId: number) => {
+    if (!detalheChamado) return;
+    setLoadingEncaminhar(true);
+    try {
+      await encaminharChamado(detalheChamado.id, especialidadeId);
+      setModalEncaminhar(false);
+      navigate("/recepcao");
+    } catch (error) {
+      console.error("Erro ao encaminhar chamado", error);
+      setToast("Erro ao encaminhar chamado");
+    } finally {
+      setLoadingEncaminhar(false);
     }
   };
 
@@ -408,43 +431,40 @@ export const Checkin = () => {
                 <Divider sx={{ borderColor: PANEL_BORDER, my: 3 }} />
 
                 <Stack spacing={1.5}>
-                  <Button
-                    fullWidth
-                    size="large"
-                    variant="contained"
-                    color="success"
-                    startIcon={<HowToRegIcon />}
-                    onClick={() => setModalCheckIn(true)}
-                    sx={{ fontWeight: 600, py: 1.4 }}
-                  >
-                    Confirmar check-in
-                  </Button>
-
-                  <Stack direction="row" spacing={1}>
+                  {detalheChamado.statusChamado === "AGUARDANDO_CHECKIN" && (
                     <Button
                       fullWidth
-                      size="medium"
-                      variant="outlined"
+                      size="large"
+                      variant="contained"
+                      color="success"
+                      startIcon={<HowToRegIcon />}
+                      onClick={() => setModalCheckIn(true)}
+                      sx={{ fontWeight: 600, py: 1.4 }}
+                    >
+                      Confirmar check-in
+                    </Button>
+                  )}
+
+                  {detalheChamado.statusChamado ===
+                    "AGUARDANDO_ENCAMINHAMENTO" && (
+                    <Button
+                      fullWidth
+                      size="large"
+                      variant="contained"
                       startIcon={<CallSplitIcon />}
-                      onClick={() =>
-                        navigate(
-                          `/recepcao/encaminhamento/${detalheChamado.id}`,
-                        )
-                      }
+                      onClick={() => setModalEncaminhar(true)}
                       sx={{
-                        color: "#2563eb",
-                        borderColor: "#93c5fd",
-                        bgcolor: "#eff6ff",
                         fontWeight: 600,
-                        "&:hover": {
-                          borderColor: "#2563eb",
-                          bgcolor: "#dbeafe",
-                        },
+                        py: 1.4,
+                        bgcolor: "#2563eb",
+                        "&:hover": { bgcolor: "#1d4ed8" },
                       }}
                     >
-                      Encaminhar
+                      Encaminhar para especialidade
                     </Button>
+                  )}
 
+                  <Stack direction="row" spacing={1}>
                     <Button
                       fullWidth
                       size="medium"
@@ -515,6 +535,14 @@ export const Checkin = () => {
         onConfirmar={handleConfirmarCancelar}
         paciente={pacienteModal}
         loading={loadingCancelar}
+      />
+
+      <ModalEncaminharChamado
+        open={modalEncaminhar}
+        onClose={() => !loadingEncaminhar && setModalEncaminhar(false)}
+        onConfirmar={handleConfirmarEncaminhar}
+        paciente={pacienteModal}
+        loading={loadingEncaminhar}
       />
 
       <Snackbar

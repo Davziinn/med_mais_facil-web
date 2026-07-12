@@ -2,6 +2,7 @@
 
   export type ChamadoStatus =
     | "AGUARDANDO_CHECKIN"
+    | "AGUARDANDO_ENCAMINHAMENTO"
     | "EM_ESPERA"
     | "EM_ATENDIMENTO"
     | "FINALIZADO"
@@ -16,6 +17,7 @@
     }
   > = {
     AGUARDANDO_CHECKIN: {label: "Aguardando Check-In", color: "warning" },
+    AGUARDANDO_ENCAMINHAMENTO: { label: "Aguardando Encaminhamento", color: "primary" },
     EM_ESPERA: { label: "Aguardando", color: "primary" },
     EM_ATENDIMENTO: { label: "Em Atendimento", color: "success" },
     FINALIZADO: { label: "Finalizado", color: "default" },

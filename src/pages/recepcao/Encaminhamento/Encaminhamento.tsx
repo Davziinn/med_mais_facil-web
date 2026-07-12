@@ -57,7 +57,7 @@ export const Encaminhamento = () => {
 
   const navigate = useNavigate();
 
-  const { filaEspera } = useFilaEspera();
+  const { filaEsperaRecepcao } = useFilaEspera();
   const { detalheChamado } = useDetalheChamado(idNumber);
   const { encaminharChamado } = useEncaminharChamado();
   const { especialidades } = useEspecialidade();
@@ -72,11 +72,9 @@ export const Encaminhamento = () => {
   } | null>(null);
 
 
-  console.log("detalheChamado", detalheChamado);
-
   // Sem ID na rota: exibe lista de pacientes da fila
   if (!id) {
-    const filaFiltrada = filaEspera.filter((fila) =>
+    const filaFiltrada = filaEsperaRecepcao.filter((fila) =>
       fila.paciente.nome.toLowerCase().includes(busca.toLowerCase()),
     );
 

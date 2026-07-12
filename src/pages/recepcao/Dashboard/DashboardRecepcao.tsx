@@ -176,8 +176,8 @@ export const DashboardRecepcao = () => {
       }
     >
       {/* STATS */}
-      <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+      <Grid container spacing={2.5} sx={{ mb: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             icon={<HowToRegIcon />}
             label="Aguardando check-in"
@@ -185,7 +185,7 @@ export const DashboardRecepcao = () => {
             color="#60a5fa"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             icon={<HourglassTopIcon />}
             label="Aguardando atendimento"
@@ -193,12 +193,20 @@ export const DashboardRecepcao = () => {
             color="#fcd34d"
           />
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             icon={<PersonOffIcon />}
             label="Pacientes ausentes"
             value={metricas?.ausentes || 0}
             color="#f87171"
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <StatCard
+            icon={<CallSplitIcon />}
+            label="Aguardando Encaminhamento"
+            value={metricas?.aguardandoEncaminhamento || 0}
+            color="#a855f7"
           />
         </Grid>
         {/* <Grid size={{ xs: 12, sm: 6, md: 3 }}>

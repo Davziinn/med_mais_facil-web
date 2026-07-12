@@ -99,15 +99,15 @@ function formatTempo(min: number) {
 export const BuscaPaciente = () => {
   const navigate = useNavigate();
 
-  const { filaEspera } = useFilaEspera();
+  const { filaEsperaRecepcao } = useFilaEspera();
 
   const [q, setQ] = useState("");
   const [sel, setSel] = useState<RecepcaoChamado | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const todos: RecepcaoChamado[] = useMemo(
-    () => filaEspera.map(mapFilaToItem),
-    [filaEspera],
+    () => filaEsperaRecepcao.map(mapFilaToItem),
+    [filaEsperaRecepcao],
   );
 
   const resultados: RecepcaoChamado[] = useMemo(() => {
@@ -247,7 +247,7 @@ export const BuscaPaciente = () => {
                     sx={{ alignItems: "center" }}
                   >
                     <PrioridadeTag p={c.prioridade} />
-                    <PresencaTag s={c.presenca} />
+                    <PresencaTag s={c.presenca as unknown as StatusChamadoResponseAPI} />
                   </Stack>
                 </Box>
               ))
@@ -321,7 +321,7 @@ export const BuscaPaciente = () => {
 
               <Stack direction="row" spacing={1.5} sx={{ mb: 2 }}>
                 <PrioridadeTag p={selAtualizado.prioridade} />
-                <PresencaTag s={selAtualizado.presenca} />
+                <PresencaTag s={selAtualizado.presenca as unknown as StatusChamadoResponseAPI} />
               </Stack>
 
               <Grid container spacing={2}>

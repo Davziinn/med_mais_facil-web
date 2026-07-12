@@ -3,6 +3,7 @@ import type { PacienteResponseDTO } from "./pacienteService";
 
 export type StatusChamadoResponseAPI =
   | "AGUARDANDO_CHECKIN"
+  | "AGUARDANDO_ENCAMINHAMENTO"
   | "EM_ESPERA"
   | "EM_ATENDIMENTO"
   | "FINALIZADO"
