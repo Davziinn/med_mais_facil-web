@@ -34,6 +34,7 @@ import { useRecepcaoDashboard } from "../../../hooks/useRecepcaoDashboard";
 // import { extrairApenasHoras } from "../../../utils/FormataTempo";
 import { ModalConfirmarAusente } from "../../../components/modais/ModalConfirmarAusente";
 import type { PrioridadeChamadoResponseAPI } from "../../../service/api/filaEsperaService";
+import StatusBadge from "../../../components/StatusBadge";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -157,7 +158,9 @@ export const DashboardRecepcao = () => {
 
   const fila = filaEsperaRecepcao.filter(
     (c) =>
-      c.statusChamado === "EM_ESPERA" || c.statusChamado === "EM_ATENDIMENTO",
+      c.statusChamado === "EM_ESPERA" ||
+      c.statusChamado === "EM_ATENDIMENTO" ||
+      c.statusChamado === "AGUARDANDO_ENCAMINHAMENTO",
   );
 
   return (
@@ -282,7 +285,7 @@ export const DashboardRecepcao = () => {
                     display: "grid",
                     gridTemplateColumns: {
                       xs: "auto 1fr auto",
-                      md: "60px 1fr 160px 140px 120px auto",
+                      md: "60px 1fr 160px 250px 120px auto",
                     },
                     alignItems: "center",
                     gap: 2,
@@ -333,9 +336,9 @@ export const DashboardRecepcao = () => {
                   </Box>
 
                   {/* STATUS / PRESENÇA */}
-                  {/* <Box sx={{ display: { xs: "none", md: "block" } }}>
-                    <PresencaTag s={c.presenca ?? "PRESENTE"} />
-                  </Box> */}
+                  <Box sx={{ display: { xs: "none", md: "block" } }}>
+                    <StatusBadge status={c.statusChamado} />
+                  </Box>
 
                   {/* TEMPO */}
                   <Box
@@ -471,7 +474,7 @@ export const DashboardRecepcao = () => {
                   size="small"
                   variant="contained"
                   startIcon={<HowToRegIcon />}
-                   onClick={() => navigate(`/recepcao/checkin/${c.id}`)}
+                  onClick={() => navigate(`/recepcao/checkin/${c.id}`)}
                 >
                   Check-in
                 </Button>

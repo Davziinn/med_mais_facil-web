@@ -88,6 +88,10 @@ export const PRESENCA_LABEL: Record<
     label: "Aguardando check-in",
     color: "#64748b",
   },
+  AGUARDANDO_ENCAMINHAMENTO: {
+    label: "Aguardando encaminhamento",
+    color: "#9b3c05",
+  },
 
   EM_ESPERA: {
     label: "Em espera",

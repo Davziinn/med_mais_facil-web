@@ -25,7 +25,6 @@ import {
   PageShell,
   panelSx,
   PrioridadeTag,
-  PresencaTag,
   TEXT,
   TEXT_DIM,
   PANEL_BORDER,
@@ -37,15 +36,15 @@ import type {
   StatusChamadoResponseAPI,
   PrioridadeChamadoResponseAPI,
 } from "../../service/api/filaEsperaService";
+import StatusBadge from "../../components/StatusBadge";
 
 type Prioridade = PrioridadeChamadoResponseAPI;
-type Presenca = "aguardando_checkin" | "presente" | "ausente";
 
 type RecepcaoChamado = {
   id: string;
   senha: string;
   prioridade: Prioridade;
-  presenca: Presenca;
+  presenca: StatusChamadoResponseAPI;
   tempoEspera: number;
   queixaPrincipal: string;
   paciente: {
@@ -58,26 +57,12 @@ type RecepcaoChamado = {
   };
 };
 
-function mapStatus(status: StatusChamadoResponseAPI): Presenca {
-  switch (status) {
-    case "AGUARDANDO_CHECKIN":
-      return "aguardando_checkin";
-    case "EM_ESPERA":
-    case "EM_ATENDIMENTO":
-      return "presente";
-    case "AUSENTE":
-    case "FINALIZADO":
-    case "CANCELADO":
-      return "ausente";
-  }
-}
-
 function mapFilaToItem(f: FilaEsperaResponseDTO): RecepcaoChamado {
   return {
     id: String(f.id),
     senha: f.senha,
     prioridade: f.prioridadeChamado,
-    presenca: mapStatus(f.statusChamado),
+    presenca: f.statusChamado,
     tempoEspera: f.tempoEspera,
     queixaPrincipal: f.queixa,
     paciente: {
@@ -127,7 +112,7 @@ export const BuscaPaciente = () => {
   );
 
   const posicaoNaFila = (id: string) => {
-    const presentes = todos.filter((i) => i.presenca === "presente");
+    const presentes = todos.filter((i) => i.presenca === "EM_ESPERA" || i.presenca === "EM_ATENDIMENTO");
     return presentes.findIndex((i) => i.id === id) + 1;
   };
 
@@ -247,7 +232,7 @@ export const BuscaPaciente = () => {
                     sx={{ alignItems: "center" }}
                   >
                     <PrioridadeTag p={c.prioridade} />
-                    <PresencaTag s={c.presenca as unknown as StatusChamadoResponseAPI} />
+                    <StatusBadge status={c.presenca} />
                   </Stack>
                 </Box>
               ))
@@ -321,7 +306,7 @@ export const BuscaPaciente = () => {
 
               <Stack direction="row" spacing={1.5} sx={{ mb: 2 }}>
                 <PrioridadeTag p={selAtualizado.prioridade} />
-                <PresencaTag s={selAtualizado.presenca as unknown as StatusChamadoResponseAPI} />
+                <StatusBadge status={selAtualizado.presenca} />
               </Stack>
 
               <Grid container spacing={2}>
@@ -335,7 +320,7 @@ export const BuscaPaciente = () => {
                   <Field
                     label="Posição na fila"
                     value={
-                      selAtualizado.presenca === "presente" &&
+                      selAtualizado.presenca === "EM_ESPERA" || selAtualizado.presenca === "AGUARDANDO_ENCAMINHAMENTO" &&
                       posicaoNaFila(selAtualizado.id) > 0
                         ? `${posicaoNaFila(selAtualizado.id)}º`
                         : "—"

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Box,
@@ -32,6 +32,7 @@ import { useFilaEspera } from "../../../hooks/useFilaEspera";
 import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
 import { useEncaminharChamado } from "../../../hooks/useEncaminharChamado";
 import { useEspecialidade } from "../../../hooks/useEspecialidade";
+import { ModalConfirmarEncaminhamento } from "../../../components/modais/ModalConfirmarEncaminhamento";
 import type {
   PrioridadeChamadoResponseAPI,
   StatusChamadoResponseAPI,
@@ -58,21 +59,26 @@ export const Encaminhamento = () => {
   const navigate = useNavigate();
 
   const { filaEsperaRecepcao } = useFilaEspera();
-  const { detalheChamado } = useDetalheChamado(idNumber);
+  const { detalheChamado, buscarDetalheChamado } = useDetalheChamado(idNumber);
   const { encaminharChamado } = useEncaminharChamado();
   const { especialidades } = useEspecialidade();
 
   const [especialidadeSelecionada, setEspecialidadeSelecionada] =
     useState<EspecialidadeMedicoResponseDTO | null>(null);
   const [busca, setBusca] = useState("");
+  const [modalConfirmar, setModalConfirmar] = useState(false);
   const [confirmando, setConfirmando] = useState(false);
   const [toast, setToast] = useState<{
     msg: string;
     severity: "success" | "error";
   } | null>(null);
 
+  useEffect(() => {
+    if (id) {
+      buscarDetalheChamado();
+    }
+  }, [id, buscarDetalheChamado]);
 
-  // Sem ID na rota: exibe lista de pacientes da fila
   if (!id) {
     const filaFiltrada = filaEsperaRecepcao.filter((fila) =>
       fila.paciente.nome.toLowerCase().includes(busca.toLowerCase()),
@@ -186,6 +192,8 @@ export const Encaminhamento = () => {
       await encaminharChamado(detalheChamado.id, {
         especialidadeId: especialidadeSelecionada.id,
       });
+
+      setModalConfirmar(false);
 
       setToast({
         msg: `Paciente encaminhado para ${especialidadeSelecionada.nome}.`,
@@ -424,22 +432,44 @@ export const Encaminhamento = () => {
               <Button
                 variant="contained"
                 size="large"
-                startIcon={
-                  confirmando ? (
-                    <CircularProgress size={16} sx={{ color: "inherit" }} />
-                  ) : (
-                    <CallSplitIcon />
-                  )
-                }
-                disabled={!especialidadeSelecionada || confirmando}
-                onClick={confirmar}
+                startIcon={<CallSplitIcon />}
+                disabled={!especialidadeSelecionada}
+                onClick={() => setModalConfirmar(true)}
+                sx={{
+                  bgcolor: "#2563eb",
+                  color: "#fff",
+                  fontWeight: 600,
+                  "&:hover": {
+                    bgcolor: "#1d4ed8",
+                  },
+                  "&.Mui-disabled": {
+                    bgcolor: "#cbd5e1",
+                    color: "#94a3b8",
+                  },
+                }}
               >
-                {confirmando ? "Encaminhando..." : "Confirmar encaminhamento"}
+                Confirmar encaminhamento
               </Button>
             </Stack>
           </Box>
         </Grid>
       </Grid>
+
+      <ModalConfirmarEncaminhamento
+        open={modalConfirmar}
+        onClose={() => !confirmando && setModalConfirmar(false)}
+        onConfirmar={confirmar}
+        paciente={
+          detalheChamado
+            ? {
+                nome: detalheChamado.paciente.nome,
+                senha: detalheChamado.senha,
+              }
+            : null
+        }
+        especialidade={especialidadeSelecionada}
+        loading={confirmando}
+      />
 
       <Snackbar
         open={!!toast}

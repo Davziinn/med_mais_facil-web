@@ -56,8 +56,6 @@ export default function ModalGuiaVisualizacao({
     onCopy?.(`Número da guia ${guia.numeroGuia} copiado.`);
   };
 
-  console.log("ModalGuiaVisualizacao renderizado com guia:", guia);
-
   const handleImprimir = () => {
     window.print();
   };

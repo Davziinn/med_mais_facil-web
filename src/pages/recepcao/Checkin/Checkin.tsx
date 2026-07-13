@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -40,9 +40,7 @@ import { useRecepcaoDashboard } from "../../../hooks/useRecepcaoDashboard";
 import { ModalConfirmarCheckIn } from "../../../components/modais/ModalConfirmarCheckIn";
 import { ModalConfirmarAusente } from "../../../components/modais/ModalConfirmarAusente";
 import { ModalCancelarChamado } from "../../../components/modais/ModalCancelarChamado";
-import { ModalEncaminharChamado } from "../../../components/modais/ModalEncaminharChamado";
 import StatusBadge from "../../../components/StatusBadge";
-import { useEncaminharChamado } from "../../../hooks/useEncaminharChamado";
 
 function calcMinutos(data?: string | Date) {
   if (!data) return 0;
@@ -62,14 +60,9 @@ export const Checkin = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const idNumero = id ? Number(id) : 0;
-  const { detalheChamado } = useDetalheChamado(idNumero);
-  const {
-    confirmarCheckIn,
-    marcarPacienteComoAusente,
-    cancelarChamado,
-  } = useRecepcaoDashboard();
-
-  const { encaminharChamado } = useEncaminharChamado();
+  const { detalheChamado, buscarDetalheChamado } = useDetalheChamado(idNumero);
+  const { confirmarCheckIn, marcarPacienteComoAusente, cancelarChamado } =
+    useRecepcaoDashboard();
 
   const [tab, setTab] = useState(0);
   const [codigo, setCodigo] = useState("");
@@ -85,9 +78,6 @@ export const Checkin = () => {
   const [modalCancelar, setModalCancelar] = useState(false);
   const [loadingCancelar, setLoadingCancelar] = useState(false);
 
-  const [modalEncaminhar, setModalEncaminhar] = useState(false);
-  const [loadingEncaminhar, setLoadingEncaminhar] = useState(false);
-
   const pacienteModal = detalheChamado
     ? {
         id: detalheChamado.id,
@@ -99,6 +89,12 @@ export const Checkin = () => {
         statusChamado: detalheChamado.statusChamado,
       }
     : null;
+
+  useEffect(() => {
+    if (idNumero) {
+      buscarDetalheChamado();
+    }
+  }, [idNumero, buscarDetalheChamado]);
 
   const handleConfirmarCheckIn = async () => {
     if (!detalheChamado) return;
@@ -142,21 +138,6 @@ export const Checkin = () => {
       setToast("Erro ao cancelar chamado");
     } finally {
       setLoadingCancelar(false);
-    }
-  };
-
-  const handleConfirmarEncaminhar = async (especialidadeId: number) => {
-    if (!detalheChamado) return;
-    setLoadingEncaminhar(true);
-    try {
-      await encaminharChamado(detalheChamado.id, especialidadeId);
-      setModalEncaminhar(false);
-      navigate("/recepcao");
-    } catch (error) {
-      console.error("Erro ao encaminhar chamado", error);
-      setToast("Erro ao encaminhar chamado");
-    } finally {
-      setLoadingEncaminhar(false);
     }
   };
 
@@ -360,7 +341,9 @@ export const Checkin = () => {
                   <Grid size={{ xs: 6, sm: 3 }}>
                     <Field
                       label="Convênio"
-                      value={detalheChamado.paciente.convenio || "Não informado"}
+                      value={
+                        detalheChamado.paciente.convenio || "Não informado"
+                      }
                     />
                   </Grid>
                   <Grid size={12}>
@@ -445,14 +428,17 @@ export const Checkin = () => {
                     </Button>
                   )}
 
-                  {detalheChamado.statusChamado ===
-                    "AGUARDANDO_ENCAMINHAMENTO" && (
+                  {detalheChamado.statusChamado === "EM_ESPERA" && (
                     <Button
                       fullWidth
                       size="large"
                       variant="contained"
                       startIcon={<CallSplitIcon />}
-                      onClick={() => setModalEncaminhar(true)}
+                      onClick={() =>
+                        navigate(
+                          `/recepcao/encaminhamento/${detalheChamado.id}`,
+                        )
+                      }
                       sx={{
                         fontWeight: 600,
                         py: 1.4,
@@ -535,14 +521,6 @@ export const Checkin = () => {
         onConfirmar={handleConfirmarCancelar}
         paciente={pacienteModal}
         loading={loadingCancelar}
-      />
-
-      <ModalEncaminharChamado
-        open={modalEncaminhar}
-        onClose={() => !loadingEncaminhar && setModalEncaminhar(false)}
-        onConfirmar={handleConfirmarEncaminhar}
-        paciente={pacienteModal}
-        loading={loadingEncaminhar}
       />
 
       <Snackbar

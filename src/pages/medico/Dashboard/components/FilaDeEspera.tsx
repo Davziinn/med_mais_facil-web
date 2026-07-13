@@ -15,16 +15,21 @@ import { Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useFilaEspera } from "../../../../hooks/useFilaEspera";
 import PrioridadeBadge from "../../../../components/PrioridadeBadge";
+import { useEffect } from "react";
 
 export const FilaDeEspera = () => {
-  const { filaEsperaEspecialidadeMedico } = useFilaEspera();
+  const {
+    filaEsperaEspecialidadeMedico,
+    carregarFilaEsperaEspecialidadeMedico,
+  } = useFilaEspera();
 
   const pacientesEmEspera = filaEsperaEspecialidadeMedico.filter(
     (fila) => fila.statusChamado === "EM_ESPERA",
   );
 
-  console.log(filaEsperaEspecialidadeMedico);
-  console.log("FDEFDF", pacientesEmEspera);
+  useEffect(() => {
+    carregarFilaEsperaEspecialidadeMedico();
+  }, []);
 
   return (
     <Grid size={{ xs: 12, lg: 6 }}>

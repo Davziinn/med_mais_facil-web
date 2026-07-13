@@ -18,7 +18,7 @@
   > = {
     AGUARDANDO_CHECKIN: {label: "Aguardando Check-In", color: "warning" },
     AGUARDANDO_ENCAMINHAMENTO: { label: "Aguardando Encaminhamento", color: "primary" },
-    EM_ESPERA: { label: "Aguardando", color: "primary" },
+    EM_ESPERA: { label: "Aguardando Atendimento", color: "primary" },
     EM_ATENDIMENTO: { label: "Em Atendimento", color: "success" },
     FINALIZADO: { label: "Finalizado", color: "default" },
     CANCELADO: { label: "Cancelado", color: "error" },

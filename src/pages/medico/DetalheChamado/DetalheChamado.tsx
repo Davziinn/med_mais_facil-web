@@ -5,11 +5,16 @@ import { PacienteInfo } from "./components/PacienteInfo";
 import { AlertasEventos } from "./components/AlertasEventos";
 import { SintomaPaciente } from "./components/SintomaPaciente";
 import { useDetalheChamado } from "../../../hooks/useDetalheChamado";
+import { useEffect } from "react";
 
 export const DetalheChamado = () => {
   const { id } = useParams();
   const idNumber = Number(id);
-  const { detalheChamado, setDetalheChamado, loading } = useDetalheChamado(idNumber);
+  const { detalheChamado, setDetalheChamado, loading, buscarDetalheChamado } = useDetalheChamado(idNumber);
+
+  useEffect(() => {
+    buscarDetalheChamado();
+  }, [buscarDetalheChamado]);
 
   if (!id) {
     return (
