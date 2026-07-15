@@ -469,6 +469,9 @@ export const Encaminhamento = () => {
         }
         especialidade={especialidadeSelecionada}
         loading={confirmando}
+        jaEncaminhado={
+          detalheChamado.statusChamado !== "AGUARDANDO_ENCAMINHAMENTO"
+        }
       />
 
       <Snackbar

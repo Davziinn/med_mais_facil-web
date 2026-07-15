@@ -60,6 +60,11 @@ const FILTROS: { v: "todos" | Prioridade; label: string }[] = [
   { v: "BAIXA", label: "Baixa" },
 ];
 
+const GRID_COLUMNS = {
+  xs: "60px 1fr auto",
+  md: "70px 110px 1fr 160px 190px 120px 190px",
+};
+
 function formatTempo(min: number) {
   if (!min && min !== 0) return "0 min";
 
@@ -342,10 +347,7 @@ export const RecepcaoFila = () => {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: {
-              xs: "60px 1fr auto",
-              md: "70px 110px 1fr 160px 140px 130px 200px",
-            },
+            gridTemplateColumns: GRID_COLUMNS,
             gap: 2,
             px: 2.5,
             py: 1.5,
@@ -381,10 +383,7 @@ export const RecepcaoFila = () => {
                 key={c.id}
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: {
-                    xs: "60px 1fr auto",
-                    md: "70px 110px 1fr 160px 140px 130px 200px",
-                  },
+                  gridTemplateColumns: GRID_COLUMNS,
                   gap: 2,
                   px: 2.5,
                   py: 2,

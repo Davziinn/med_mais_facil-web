@@ -11,7 +11,7 @@ export const useFilaEmAtendimento = () => {
   const carregarFilaEmAtendimento = async () => {
     try {
       const data = await getFilaEmAtendimento();
-      setFilaEmAtendimento(data);
+      setFilaEmAtendimento(data.content);
     } catch (error) {
       console.error("Erro ao carregar a fila em atendimento:", error);
     }

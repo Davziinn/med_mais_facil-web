@@ -29,6 +29,7 @@ type ModalConfirmarEncaminhamentoProps = {
   paciente: PacienteModal | null;
   especialidade: EspecialidadeModal | null;
   loading: boolean;
+  jaEncaminhado?: boolean;
 };
 
 export function ModalConfirmarEncaminhamento({
@@ -38,14 +39,22 @@ export function ModalConfirmarEncaminhamento({
   paciente,
   especialidade,
   loading,
+  jaEncaminhado = false,
 }: ModalConfirmarEncaminhamentoProps) {
   if (!paciente || !especialidade) return null;
 
   return (
-    <Dialog open={open} onClose={() => !loading && onClose()} maxWidth="xs" fullWidth>
+    <Dialog
+      open={open}
+      onClose={() => !loading && onClose()}
+      maxWidth="xs"
+      fullWidth
+    >
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <CallSplitIcon sx={{ color: "#2563eb" }} />
-        Confirmar encaminhamento
+        {jaEncaminhado
+          ? "Confirmar reencaminhamento"
+          : "Confirmar encaminhamento"}
       </DialogTitle>
 
       <DialogContent>
@@ -58,6 +67,13 @@ export function ModalConfirmarEncaminhamento({
               {paciente.nome} · Senha {paciente.senha}
             </Typography>
           </Box>
+
+          {jaEncaminhado && (
+            <Alert severity="warning" sx={{ fontSize: 13 }}>
+              Este paciente já foi encaminhado anteriormente. Confirmar aqui vai
+              reencaminhá-lo, substituindo o encaminhamento atual.
+            </Alert>
+          )}
 
           <Alert severity="info" sx={{ fontSize: 13 }}>
             Este chamado ficará visível apenas para médicos de{" "}
@@ -81,7 +97,11 @@ export function ModalConfirmarEncaminhamento({
           }
           sx={{ bgcolor: "#2563eb", "&:hover": { bgcolor: "#1d4ed8" } }}
         >
-          {loading ? "Encaminhando..." : "Confirmar encaminhamento"}
+          {loading
+            ? "Encaminhando..."
+            : jaEncaminhado
+              ? "Confirmar reencaminhamento"
+              : "Confirmar encaminhamento"}
         </Button>
       </DialogActions>
     </Dialog>

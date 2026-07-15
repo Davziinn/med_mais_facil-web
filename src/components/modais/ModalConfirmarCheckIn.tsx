@@ -59,7 +59,7 @@ export function ModalConfirmarCheckIn({
             Confirmar check-in
           </Typography>
           <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-            Confirme a presença física do paciente
+            Confirme a chegada física do paciente na unidade
           </Typography>
         </Box>
       </DialogTitle>
@@ -151,9 +151,10 @@ export function ModalConfirmarCheckIn({
           variant="body2"
           sx={{ color: "text.secondary", lineHeight: 1.6 }}
         >
-          Ao confirmar, o paciente será movido para a{" "}
-          <strong style={{ fontWeight: 600 }}>fila de espera</strong> e ficará
-          disponível para atendimento médico.
+          Ao confirmar, o paciente será movido para{" "}
+          <strong style={{ fontWeight: 600 }}>aguardando encaminhamento</strong>
+          , e ficará disponível para você selecionar a especialidade de
+          destino.
         </Typography>
       </DialogContent>
 

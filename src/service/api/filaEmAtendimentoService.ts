@@ -9,7 +9,15 @@ export interface FilaEmAtendimentoResponseDTO {
   statusChamado: StatusChamadoResponseAPI;
 }
 
-export const getFilaEmAtendimento = async (): Promise<FilaEmAtendimentoResponseDTO[]> => {
-    const response = await api.get<FilaEmAtendimentoResponseDTO[]>('/medico')
-    return response.data
+interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
 }
+
+export const getFilaEmAtendimento = async (): Promise<PageResponse<FilaEmAtendimentoResponseDTO>> => {
+  const response = await api.get<PageResponse<FilaEmAtendimentoResponseDTO>>("/medico");
+  return response.data;
+};

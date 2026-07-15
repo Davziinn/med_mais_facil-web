@@ -28,7 +28,7 @@ export const useRecepcaoDashboard = () => {
   const carregarFilaAguardandoCheckIn = async () => {
     try {
       const data = await getFilaAguardandoCheckIn();
-      setFilaCheckIn(data);
+      setFilaCheckIn(data.content);
     } catch (error) {
       console.error(
         "Erro ao buscar fila dos pacientes que estão aguardando o Check-In",

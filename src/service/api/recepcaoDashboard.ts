@@ -17,13 +17,21 @@ export interface FilaAguardandoCheckinResponseDTO {
     prioridadeChamado: PrioridadeChamadoResponseAPI;
 }
 
+interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
 export const getRecepcaoDashboardMetricas = async (): Promise<RecepcaoDashboardMetricasResponseDTO> => {
     const response = await api.get<RecepcaoDashboardMetricasResponseDTO>("/recepcao/metricas")
     return response.data;
 }
 
-export const getFilaAguardandoCheckIn = async (): Promise<FilaAguardandoCheckinResponseDTO[]> => {
-    const response = await api.get<FilaAguardandoCheckinResponseDTO[]>("/recepcao")
+export const getFilaAguardandoCheckIn = async (): Promise<PageResponse<FilaAguardandoCheckinResponseDTO>> => {
+    const response = await api.get<PageResponse<FilaAguardandoCheckinResponseDTO>>("/recepcao")
     return response.data
 }
 
